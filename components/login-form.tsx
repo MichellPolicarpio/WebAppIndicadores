@@ -11,37 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Mail, Lock, AlertCircle } from "lucide-react"
 
-// Credenciales simuladas
-const MOCK_USERS = [
-  {
-    email: "admin.gmas@gmas.com",
-    password: "gmas123",
-    company: "GMas",
-    gerencia: "Operaciones",
-    name: "Erick Guillaumin",
-  },
-  {
-    email: "gerente.gmas@gmas.com",
-    password: "gmas123",
-    company: "GMas",
-    gerencia: "Comercial",
-    name: "María González",
-  },
-  {
-    email: "admin.cab@cab.com",
-    password: "cab123",
-    company: "CAB",
-    gerencia: "Operaciones",
-    name: "Nadia Portugal",
-  },
-  {
-    email: "gerente.cab@cab.com",
-    password: "cab123",
-    company: "CAB",
-    gerencia: "Finanzas",
-    name: "Ana Martínez",
-  },
-]
+// Ya no usamos credenciales simuladas, ahora usamos la base de datos
 
 export function LoginForm() {
   const router = useRouter()
@@ -56,21 +26,37 @@ export function LoginForm() {
     setError("")
     setLoading(true)
 
-    // Simular delay de autenticación
-    await new Promise((resolve) => setTimeout(resolve, 500))
+    try {
+      // Llamar a la API de login
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          usuario: email, // Usamos email como campo de usuario
+          contraseña: password
+        })
+      })
 
-    const user = MOCK_USERS.find((u) => u.email === email && u.password === password)
+      const data = await response.json()
 
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user))
-      setShowSplash(true)
+      if (data.success) {
+        // Guardar usuario en localStorage
+        localStorage.setItem("user", JSON.stringify(data.user))
+        setShowSplash(true)
 
-      // Wait for splash animation then redirect
-      setTimeout(() => {
-        router.push("/dashboard")
-      }, 2000)
-    } else {
-      setError("Credenciales incorrectas")
+        // Wait for splash animation then redirect
+        setTimeout(() => {
+          router.push("/dashboard")
+        }, 2000)
+      } else {
+        setError(data.message || "Credenciales incorrectas")
+        setLoading(false)
+      }
+    } catch (error) {
+      console.error('Error en login:', error)
+      setError("Error de conexión. Intenta nuevamente.")
       setLoading(false)
     }
   }
@@ -109,7 +95,7 @@ export function LoginForm() {
 
   return (
     <Card className="border-slate-700/50 bg-slate-900/80 backdrop-blur-xl shadow-2xl shadow-blue-900/20">
-      <CardHeader className="space-y-3 pb-6">
+      <CardHeader className="space-y-3 pb-6 text-center">
         <CardTitle className="text-2xl text-white font-semibold">Iniciar Sesión</CardTitle>
         <CardDescription className="text-slate-400">Ingresa tus credenciales para acceder al sistema</CardDescription>
       </CardHeader>
@@ -117,14 +103,14 @@ export function LoginForm() {
         <form onSubmit={handleSubmit} className="space-y-5">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-slate-200 text-sm font-medium">
-              Correo Electrónico
+              Usuario
             </Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
               <Input
                 id="email"
-                type="email"
-                placeholder="usuario@empresa.com"
+                type="text"
+                placeholder="Ingresa tu usuario"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
@@ -176,16 +162,20 @@ export function LoginForm() {
           <div className="mt-6 p-4 bg-slate-800/30 border border-slate-700/50 rounded-lg backdrop-blur">
             <div className="text-xs text-slate-400 mb-3 font-semibold flex items-center gap-2">
               <div className="w-1.5 h-1.5 bg-blue-500 rounded-full" />
-              Credenciales de prueba
+              Base de Datos Conectada
             </div>
             <div className="space-y-2 text-xs">
               <div className="flex items-center justify-between p-2 bg-slate-800/50 rounded">
-                <span className="text-slate-400">GMas:</span>
-                <span className="text-slate-300 font-mono">admin.gmas@gmas.com / gmas123</span>
+                <span className="text-slate-400">Servidor:</span>
+                <span className="text-slate-300 font-mono">localhost</span>
               </div>
               <div className="flex items-center justify-between p-2 bg-slate-800/50 rounded">
-                <span className="text-slate-400">CAB:</span>
-                <span className="text-slate-300 font-mono">admin.cab@cab.com / cab123</span>
+                <span className="text-slate-400">Base de Datos:</span>
+                <span className="text-slate-300 font-mono">control_activos</span>
+              </div>
+              <div className="flex items-center justify-between p-2 bg-slate-800/50 rounded">
+                <span className="text-slate-400">Tabla:</span>
+                <span className="text-slate-300 font-mono">UsuariosLecturas</span>
               </div>
             </div>
           </div>
