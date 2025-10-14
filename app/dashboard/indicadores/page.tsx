@@ -9,7 +9,7 @@ export default function IndicadoresPage() {
     <div className="min-h-[calc(100vh-4rem)] bg-[#F6FAFB] p-4 sm:p-6 lg:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8 sm:mb-12">
-          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3">Selección de Opción</h1>
+          <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-3">Agregar indicadores mensuales</h1>
           <p className="text-gray-600 text-sm sm:text-base lg:text-lg">Selecciona el tipo de indicador que deseas agregar</p>
         </div>
 

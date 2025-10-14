@@ -190,8 +190,8 @@ export default function AgregarVariablePage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-white">Valores Guardados</h1>
-          <p className="text-slate-400 mt-1">Gestiona las variables del sistema</p>
+          <h1 className="text-3xl font-bold text-gray-900">Valores Guardados</h1>
+          <p className="text-gray-600 mt-1">Gestiona las variables del sistema</p>
         </div>
       </div>
 
