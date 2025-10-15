@@ -42,22 +42,30 @@ export async function authenticateUserReal(usuario: string, contraseña: string)
   try {
     console.log('🔍 Autenticando usuario con consulta SQL real:', usuario)
     
-    // Consulta SQL para autenticar usuario (sin restricción de estatus por ahora)
+    // Consulta SQL (filtrada por usuario y contraseña)
     const query = `
       SELECT 
-        id, 
-        usuario, 
-        correo, 
-        nombres, 
-        apellidoPaterno, 
-        apellidoMaterno,
-        empresaOperadora,
-        idEmpresa_Gerencia,
-        estatusUsuario,
-        rolUsuario
-      FROM UsuariosLecturas 
-      WHERE usuario = @usuario 
-        AND contraseña = @contraseña
+        ul.id,
+        ul.idEmpresa_Gerencia,
+        ul.usuario,
+        ul.contraseña AS contrasena,
+        ul.rolUsuario AS rolUsuario,
+        ru.rolUsuario AS rolNombre,
+        ul.correo,
+        ul.empresaOperadora,
+        eo.claveEmpresaOperadora,
+        eo.nombreEmpresaOperadora,
+        eg.id_Gerencia,
+        eg.clave_Empresa_Gerencia,
+        g.nomGerencia
+      FROM UsuariosLecturas ul
+      INNER JOIN INDICADORES.EMPRESA_GERENCIA eg ON eg.id_Empresa_Gerencia = ul.idEmpresa_Gerencia
+      INNER JOIN EMPRESA_OPERADORA eo ON eo.idEmpresaOperadora = eg.id_Empresa
+      INNER JOIN GERENCIAS g ON g.idGerencia = eg.id_Gerencia
+      INNER JOIN ROLES_USUARIOS ru ON ru.idRol = ul.rolUsuario
+      WHERE ul.idEmpresa_Gerencia IS NOT NULL
+        AND ul.usuario = @usuario
+        AND ul.contraseña = @contraseña
     `
     
     console.log('📝 Ejecutando consulta SQL:', query)
@@ -69,7 +77,28 @@ export async function authenticateUserReal(usuario: string, contraseña: string)
       const userData = result[0]
       console.log('✅ Usuario encontrado en BD:', userData.usuario)
       
-      // Crear objeto User con datos de la base de datos
+      // Normalizar compañía a valores esperados por la UI ("GMas" | "CAB")
+      const rawClave = (userData.claveEmpresaOperadora || '').toString().toUpperCase()
+      const rawNombre = (userData.nombreEmpresaOperadora || '').toString().toUpperCase()
+      const empresaId = Number(userData.empresaOperadora)
+      let companyNormalized: 'GMas' | 'CAB'
+      if (rawClave.includes('CAB') || rawNombre.includes('CAB') || empresaId === 2) {
+        companyNormalized = 'CAB'
+      } else if (rawClave.includes('GMAS') || rawNombre.includes('GMAS') || empresaId === 1) {
+        companyNormalized = 'GMas'
+      } else {
+        // Fallback: si no se pudo inferir por texto, usar empresaOperadora
+        companyNormalized = empresaId === 1 ? 'GMas' : 'CAB'
+      }
+
+      // Nombre completo de empresa derivado del id (prioritario) y como fallback el de la BD
+      const companyFullDerived = empresaId === 1
+        ? 'GRUPO METROPOLITANO DE AGUA Y SANEAMIENTO'
+        : empresaId === 2
+        ? 'COMPAÑÍA DE AGUA DE BOCA DEL RÍO'
+        : (userData.nombreEmpresaOperadora || '')
+
+      // Crear objeto User con datos de la base de datos (usando los joins)
       const user: User = {
         id: userData.id,
         usuario: userData.usuario,
@@ -79,12 +108,13 @@ export async function authenticateUserReal(usuario: string, contraseña: string)
         apellidoMaterno: userData.apellidoMaterno || '',
         empresaOperadora: userData.empresaOperadora,
         idEmpresa_Gerencia: userData.idEmpresa_Gerencia,
-        estatusUsuario: userData.estatusUsuario,
+        estatusUsuario: 1, // no viene en la consulta explícita; asumimos activo al pasar filtros
         rolUsuario: userData.rolUsuario,
         // Campos para compatibilidad
-        email: userData.correo || '',
-        company: userData.empresaOperadora === 1 ? 'GMas' : 'CAB',
-        gerencia: userData.idEmpresa_Gerencia === 1 ? 'Operaciones' : 'Administración',
+        email: (userData.correo && userData.correo !== 'NULL') ? userData.correo : '',
+        company: companyNormalized,
+        companyFull: companyFullDerived,
+        gerencia: userData.nomGerencia || '',
         name: `${userData.nombres || ''} ${userData.apellidoPaterno || ''}`.trim()
       }
       

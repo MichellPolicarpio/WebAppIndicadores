@@ -177,31 +177,31 @@ export default function AgregarObjetivoPage() {
   }
 
   return (
-    <div className="space-y-4 sm:space-y-6 max-w-6xl mx-auto px-4 sm:px-6">
+    <div className="space-y-6 max-w-6xl mx-auto px-4 sm:px-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/dashboard/indicadores")}
           className="text-slate-400 hover:text-white hover:bg-slate-800 self-start"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white">Objetivos Guardados</h1>
-          <p className="text-slate-400 mt-1 text-sm sm:text-base">Gestiona los objetivos y metas del sistema</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Objetivos guardados</h1>
+          <p className="text-gray-600 mt-1 text-sm sm:text-base">Gestiona los objetivos y metas del sistema</p>
         </div>
       </div>
 
-      <Card className="border-slate-800 bg-slate-900">
-        <CardHeader className="border-b border-slate-800 p-4 sm:p-6">
+      <Card className="border-gray-200 bg-white">
+        <CardHeader className="border-b border-gray-200 p-4 sm:p-6">
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
             <div>
-              <CardTitle className="text-white text-lg sm:text-xl flex items-center gap-2">
+              <CardTitle className="text-gray-900 text-lg sm:text-xl flex items-center gap-2">
                 <Target className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
                 Objetivos guardados: {objetivos.length}/20
               </CardTitle>
-              <CardDescription className="text-slate-400 text-sm sm:text-base">
+              <CardDescription className="text-gray-600 text-sm sm:text-base">
                 Administra los objetivos y su progreso por periodo
               </CardDescription>
             </div>
@@ -242,21 +242,21 @@ export default function AgregarObjetivoPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[700px]">
-              <thead className="bg-slate-800 border-b border-slate-700">
+            <table className="w-full">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-300">Objetivo</th>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-300">Valor Actual</th>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-300">Valor Objetivo</th>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-300">Progreso</th>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-300 hidden sm:table-cell">Periodo</th>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-slate-300">Acciones</th>
+                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Objetivo</th>
+                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Valor Actual</th>
+                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Valor Objetivo</th>
+                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Progreso</th>
+                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">Periodo</th>
+                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-gray-200">
                 {objetivos.map((objetivo) => (
-                  <tr key={objetivo.id} className="hover:bg-slate-800/50 transition-colors">
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-white max-w-[150px] truncate" title={objetivo.nombre}>
+                  <tr key={objetivo.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 max-w-[150px] truncate" title={objetivo.nombre}>
                       {objetivo.nombre}
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
@@ -265,17 +265,17 @@ export default function AgregarObjetivoPage() {
                           <Input
                             value={editValues.actual}
                             onChange={(e) => setEditValues({ ...editValues, actual: e.target.value })}
-                            className="w-20 sm:w-24 bg-slate-800 border-slate-700 text-white text-xs sm:text-sm"
+                            className="w-20 sm:w-24 bg-white border-gray-300 text-gray-900 text-xs sm:text-sm"
                           />
                           {validationError && editingId === objetivo.id && (
-                            <div className="flex items-center gap-1 text-xs text-red-400">
+                            <div className="flex items-center gap-1 text-xs text-red-600">
                               <AlertCircle className="h-3 w-3" />
                               {validationError}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <span className="text-white font-medium">{objetivo.valorActual}</span>
+                        <span className="text-gray-900 font-medium">{objetivo.valorActual}</span>
                       )}
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
@@ -283,21 +283,21 @@ export default function AgregarObjetivoPage() {
                         <Input
                           value={editValues.objetivo}
                           onChange={(e) => setEditValues({ ...editValues, objetivo: e.target.value })}
-                          className="w-20 sm:w-24 bg-slate-800 border-slate-700 text-white text-xs sm:text-sm"
+                          className="w-20 sm:w-24 bg-white border-gray-300 text-gray-900 text-xs sm:text-sm"
                         />
                       ) : (
-                        <span className="text-blue-400 font-medium">{objetivo.valorObjetivo}</span>
+                        <span className="text-blue-600 font-medium">{objetivo.valorObjetivo}</span>
                       )}
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4">
                       <div className="flex items-center gap-1 sm:gap-2">
-                        <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden max-w-[80px] sm:max-w-[100px]">
+                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[80px] sm:max-w-[100px]">
                           <div
-                            className="h-full bg-blue-500 transition-all"
+                            className="h-full bg-blue-600 transition-all"
                             style={{ width: `${objetivo.progreso}%` }}
                           />
                         </div>
-                        <span className="text-xs text-slate-400 w-8 sm:w-10">{objetivo.progreso}%</span>
+                        <span className="text-xs text-gray-500 w-8 sm:w-10">{objetivo.progreso}%</span>
                       </div>
                     </td>
                     <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-slate-400 hidden sm:table-cell">{objetivo.periodo}</td>
@@ -364,7 +364,7 @@ export default function AgregarObjetivoPage() {
       <div className="flex justify-center sm:justify-start">
         <Button
           variant="outline"
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/dashboard/indicadores")}
           className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white w-full sm:w-auto"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

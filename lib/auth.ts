@@ -15,6 +15,7 @@ export interface User {
   // Campos adicionales para compatibilidad
   email: string
   company: string
+  companyFull?: string
   gerencia: string
   name: string
 }

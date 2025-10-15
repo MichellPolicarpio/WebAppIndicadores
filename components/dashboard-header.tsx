@@ -110,13 +110,13 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle }: Dashboard
                 <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
                   <User className="h-4 w-4 text-white" />
                 </div>
-                <span className="text-sm hidden md:inline">{user.name}</span>
+                <span className="text-sm hidden md:inline">{user.name || user.usuario}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-white border-gray-200 shadow-lg">
               <DropdownMenuLabel className="text-gray-900">
                 <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium">{user.name}</p>
+                  <p className="text-sm font-medium">{user.name || user.usuario}</p>
                   <p className="text-xs text-gray-600">{user.email}</p>
                 </div>
               </DropdownMenuLabel>

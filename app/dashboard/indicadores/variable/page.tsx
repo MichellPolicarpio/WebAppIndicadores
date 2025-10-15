@@ -179,12 +179,12 @@ export default function AgregarVariablePage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl">
+    <div className="space-y-6 max-w-6xl mx-auto px-4 sm:px-6">
       <div className="flex items-center gap-4">
         <Button
           variant="ghost"
           size="icon"
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/dashboard/indicadores")}
           className="text-slate-400 hover:text-white hover:bg-slate-800"
         >
           <ArrowLeft className="h-5 w-5" />
@@ -195,35 +195,35 @@ export default function AgregarVariablePage() {
         </div>
       </div>
 
-      <Card className="border-slate-800 bg-slate-900">
-        <CardHeader className="border-b border-slate-800">
+      <Card className="border-gray-200 bg-white">
+        <CardHeader className="border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-white">Variables guardadas: {variables.length}/25</CardTitle>
-              <CardDescription className="text-slate-400">
+              <CardTitle className="text-gray-900">Variables guardadas: {variables.length}/25</CardTitle>
+              <CardDescription className="text-gray-600">
                 Administra los valores de las variables por periodo
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-24 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="w-24 bg-white border-gray-300 text-gray-900">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectContent className="bg-white border-gray-200">
                   {availableMonths.map((month) => (
-                    <SelectItem key={month.value} value={month.value} className="text-white focus:bg-slate-700">
+                    <SelectItem key={month.value} value={month.value} className="text-gray-900 focus:bg-gray-100">
                       {month.value}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-24 bg-slate-800 border-slate-700 text-white">
+                <SelectTrigger className="w-24 bg-white border-gray-300 text-gray-900">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
+                <SelectContent className="bg-white border-gray-200">
                   {years.map((year) => (
-                    <SelectItem key={year} value={year.toString()} className="text-white focus:bg-slate-700">
+                    <SelectItem key={year} value={year.toString()} className="text-gray-900 focus:bg-gray-100">
                       {year}
                     </SelectItem>
                   ))}
@@ -239,39 +239,39 @@ export default function AgregarVariablePage() {
         <CardContent className="p-0">
           <div className="overflow-x-auto">
             <table className="w-full">
-              <thead className="bg-slate-800 border-b border-slate-700">
+              <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="text-left px-6 py-3 text-sm font-semibold text-slate-300">Variable</th>
-                  <th className="text-left px-6 py-3 text-sm font-semibold text-slate-300">Valor</th>
-                  <th className="text-left px-6 py-3 text-sm font-semibold text-slate-300">Periodo</th>
-                  <th className="text-left px-6 py-3 text-sm font-semibold text-slate-300">Acciones</th>
+                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Variable</th>
+                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Valor</th>
+                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Periodo</th>
+                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Acciones</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-800">
+              <tbody className="divide-y divide-gray-200">
                 {variables.map((variable) => (
-                  <tr key={variable.id} className="hover:bg-slate-800/50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-white">{variable.nombre}</td>
+                  <tr key={variable.id} className="hover:bg-gray-50 transition-colors">
+                    <td className="px-6 py-4 text-sm text-gray-900">{variable.nombre}</td>
                     <td className="px-6 py-4 text-sm">
                       {editingId === variable.id ? (
                         <div className="space-y-1">
                           <Input
                             value={editValue}
                             onChange={(e) => setEditValue(e.target.value)}
-                            className="w-32 bg-slate-800 border-slate-700 text-white"
+                            className="w-32 bg-white border-gray-300 text-gray-900"
                             autoFocus
                           />
                           {validationError && editingId === variable.id && (
-                            <div className="flex items-center gap-1 text-xs text-red-400">
+                            <div className="flex items-center gap-1 text-xs text-red-600">
                               <AlertCircle className="h-3 w-3" />
                               {validationError}
                             </div>
                           )}
                         </div>
                       ) : (
-                        <span className="text-white font-medium">{variable.valor}</span>
+                        <span className="text-gray-900 font-medium">{variable.valor}</span>
                       )}
                     </td>
-                    <td className="px-6 py-4 text-sm text-slate-400">{variable.periodo}</td>
+                    <td className="px-6 py-4 text-sm text-gray-500">{variable.periodo}</td>
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-2">
                         {editingId === variable.id ? (
@@ -287,7 +287,7 @@ export default function AgregarVariablePage() {
                               size="sm"
                               variant="ghost"
                               onClick={handleCancelEdit}
-                              className="text-slate-400 hover:text-white hover:bg-slate-700 h-8 px-3"
+                              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 h-8 px-3"
                             >
                               <X className="h-4 w-4" />
                             </Button>
@@ -333,7 +333,7 @@ export default function AgregarVariablePage() {
       <div className="flex justify-start">
         <Button
           variant="outline"
-          onClick={() => router.push("/dashboard")}
+          onClick={() => router.push("/dashboard/indicadores")}
           className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />

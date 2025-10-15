@@ -98,15 +98,6 @@ export default function ConfiguracionPage() {
                 <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
                   <UserIcon className="h-10 w-10 text-gray-600" />
                 </div>
-                <div>
-                  <Button
-                    variant="outline"
-                    className="border-gray-300 text-gray-700 hover:bg-gray-100 bg-transparent"
-                  >
-                    Cambiar Foto
-                  </Button>
-                  <p className="text-xs text-gray-500 mt-2">JPG, PNG o GIF. Máximo 2MB.</p>
-                </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

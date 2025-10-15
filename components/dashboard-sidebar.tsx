@@ -102,7 +102,7 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
             <div className="space-y-2 text-center">
               <div>
                 <p className="text-xs text-white/60 uppercase tracking-wide">Empresa</p>
-                <p className="text-sm font-semibold text-white">{user.company}</p>
+                <p className="text-sm font-semibold text-white">{user.companyFull || user.company}</p>
               </div>
               <div>
                 <p className="text-xs text-white/60 uppercase tracking-wide">Gerencia</p>
@@ -118,8 +118,8 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
             <Image
               src={user.company === "GMas" ? "/logos/gmas-logo.png" : "/logos/cab-logo.png"}
               alt={`${user.company} Logo`}
-              width={user.company === "GMas" ? 140 : 120}
-              height={user.company === "GMas" ? 80 : 50}
+              width={user.company === "GMas" ? 140 : 140}
+              height={user.company === "GMas" ? 80 : 75}
               className="object-contain"
             />
           </div>
