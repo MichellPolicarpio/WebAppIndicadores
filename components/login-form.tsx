@@ -189,38 +189,23 @@ export function LoginForm() {
       
       <Card className="relative border-0 bg-white/95 backdrop-blur-2xl shadow-2xl shadow-black/20 overflow-hidden">
         {/* Top accent bar */}
-<<<<<<< HEAD
         <div className="h-1 bg-gradient-to-r from-[#0D94B1] via-[#4DB1C6] to-[#8BC8D5]" />
         
         <CardHeader className="space-y-2 pb-3 pt-4 px-4 sm:px-5 text-center bg-gradient-to-b from-white to-gray-50/50">
           <div className="mx-auto w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#0D94B1] to-[#4DB1C6] rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-[#0D94B1]/30 rotate-3 hover:rotate-0 transition-transform">
             <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-=======
-        <div className="h-1.5 bg-gradient-to-r from-[#0D94B1] via-[#4DB1C6] to-[#8BC8D5]" />
-        
-        <CardHeader className="space-y-4 pb-6 pt-8 px-8 text-center bg-gradient-to-b from-white to-gray-50/50">
-          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-[#0D94B1] to-[#4DB1C6] rounded-2xl flex items-center justify-center shadow-lg shadow-[#0D94B1]/30 rotate-3 hover:rotate-0 transition-transform">
-            <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
->>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
           
-<<<<<<< HEAD
           <div className="space-y-1">
             <CardTitle className="text-lg sm:text-xl text-gray-900 font-bold">Iniciar Sesión</CardTitle>
             <CardDescription className="text-xs sm:text-sm text-gray-600">
-=======
-          <div className="space-y-2">
-            <CardTitle className="text-2xl text-gray-900 font-bold">Iniciar Sesión</CardTitle>
-            <CardDescription className="text-gray-600">
->>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
               Ingresa tus credenciales para acceder
             </CardDescription>
           </div>
         </CardHeader>
         
-<<<<<<< HEAD
         <CardContent className="px-4 sm:px-5 pb-4 sm:pb-5">
           <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
             <div className="space-y-2.5 sm:space-y-3">
@@ -229,56 +214,30 @@ export function LoginForm() {
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-[#0D94B1]/20 to-[#4DB1C6]/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity" />
                   <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#0D94B1]/60 z-10" />
-=======
-        <CardContent className="px-8 pb-8">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-gray-700 font-medium">Usuario</Label>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#0D94B1]/20 to-[#4DB1C6]/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#0D94B1]/60 z-10" />
->>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
                   <Input
                     id="email"
                     type="text"
                     placeholder="Ingresa tu usuario"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-<<<<<<< HEAD
                     className="relative pl-8 sm:pl-9 pr-3 py-3 sm:py-4 border-2 border-gray-200 focus:border-[#0D94B1] focus:ring-4 focus:ring-[#0D94B1]/10 rounded-lg transition-all text-xs sm:text-sm"
-=======
-                    className="relative pl-11 pr-4 py-6 border-2 border-gray-200 focus:border-[#0D94B1] focus:ring-4 focus:ring-[#0D94B1]/10 rounded-lg transition-all"
->>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
                     required
                   />
                 </div>
               </div>
               
-<<<<<<< HEAD
               <div className="space-y-1">
                 <Label htmlFor="password" className="text-xs sm:text-sm text-gray-700 font-medium">Contraseña</Label>
                 <div className="relative group">
                   <div className="absolute inset-0 bg-gradient-to-r from-[#0D94B1]/20 to-[#4DB1C6]/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity" />
                   <Lock className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#0D94B1]/60 z-10" />
-=======
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-gray-700 font-medium">Contraseña</Label>
-                <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#0D94B1]/20 to-[#4DB1C6]/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#0D94B1]/60 z-10" />
->>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
                   <Input
                     id="password"
                     type="password"
                     placeholder="Ingresa tu contraseña"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-<<<<<<< HEAD
                     className="relative pl-8 sm:pl-9 pr-3 py-3 sm:py-4 border-2 border-gray-200 focus:border-[#0D94B1] focus:ring-4 focus:ring-[#0D94B1]/10 rounded-lg transition-all text-xs sm:text-sm"
-=======
-                    className="relative pl-11 pr-4 py-6 border-2 border-gray-200 focus:border-[#0D94B1] focus:ring-4 focus:ring-[#0D94B1]/10 rounded-lg transition-all"
->>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
                     required
                   />
                 </div>
@@ -287,19 +246,13 @@ export function LoginForm() {
 
             {error && (
               <Alert variant="destructive" className="bg-red-50 border-2 border-red-200 text-red-700 animate-in slide-in-from-top-2">
-<<<<<<< HEAD
                 <AlertCircle className="h-3.5 w-3.5" />
                 <AlertDescription className="font-medium text-xs sm:text-sm">{error}</AlertDescription>
-=======
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="font-medium">{error}</AlertDescription>
->>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
               </Alert>
             )}
 
             <Button 
               type="submit" 
-<<<<<<< HEAD
               className="w-full bg-gradient-to-r from-[#0D94B1] to-[#4DB1C6] hover:from-[#0B7A96] hover:to-[#3A9FB8] text-white py-3 sm:py-4 rounded-lg font-semibold shadow-lg shadow-[#0D94B1]/30 hover:shadow-xl hover:shadow-[#0D94B1]/40 transition-all transform hover:-translate-y-0.5 text-xs sm:text-sm" 
               disabled={loading}
             >
@@ -312,20 +265,6 @@ export function LoginForm() {
                 <div className="flex items-center justify-center gap-1.5">
                   <span>Iniciar Sesión</span>
                   <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-=======
-              className="w-full bg-gradient-to-r from-[#0D94B1] to-[#4DB1C6] hover:from-[#0B7A96] hover:to-[#3A9FB8] text-white py-6 rounded-lg font-semibold shadow-lg shadow-[#0D94B1]/30 hover:shadow-xl hover:shadow-[#0D94B1]/40 transition-all transform hover:-translate-y-0.5" 
-              disabled={loading}
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Iniciando sesión...
-                </div>
-              ) : (
-                <div className="flex items-center justify-center gap-2">
-                  <span>Iniciar Sesión</span>
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
->>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </div>
