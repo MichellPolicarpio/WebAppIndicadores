@@ -182,74 +182,97 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="border-[#0D94B1]/30 bg-white/90 backdrop-blur-xl shadow-2xl shadow-[#0D94B1]/20">
-      <CardHeader className="space-y-3 pb-6 text-center">
-        <CardTitle className="text-2xl text-[#0D94B1] font-semibold">Iniciar Sesión</CardTitle>
-        <CardDescription className="text-[#0D94B1]">Ingresa tus credenciales para acceder al sistema</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-5">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-[#0D94B1] text-sm font-medium">
-              Usuario
-            </Label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0D94B1]" />
-              <Input
-                id="email"
-                type="text"
-                placeholder="Ingresa tu usuario"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="pl-10 bg-white border-[#0D94B1]/30 text-[#0D94B1] placeholder:text-[#0D94B1]/60 focus:border-[#0D94B1] focus:ring-[#0D94B1]/20 transition-all"
-              />
-            </div>
+    <div className="relative">
+      {/* Decorative elements around card */}
+      <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full blur-xl" />
+      <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-white/10 rounded-full blur-xl" />
+      
+      <Card className="relative border-0 bg-white/95 backdrop-blur-2xl shadow-2xl shadow-black/20 overflow-hidden">
+        {/* Top accent bar */}
+        <div className="h-1.5 bg-gradient-to-r from-[#0D94B1] via-[#4DB1C6] to-[#8BC8D5]" />
+        
+        <CardHeader className="space-y-4 pb-6 pt-8 px-8 text-center bg-gradient-to-b from-white to-gray-50/50">
+          <div className="mx-auto w-16 h-16 bg-gradient-to-br from-[#0D94B1] to-[#4DB1C6] rounded-2xl flex items-center justify-center shadow-lg shadow-[#0D94B1]/30 rotate-3 hover:rotate-0 transition-transform">
+            <svg className="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
           </div>
-
+          
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-[#0D94B1] text-sm font-medium">
-              Contraseña
-            </Label>
-            <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-[#0D94B1]" />
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="pl-10 bg-white border-[#0D94B1]/30 text-[#0D94B1] placeholder:text-[#0D94B1]/60 focus:border-[#0D94B1] focus:ring-[#0D94B1]/20 transition-all"
-              />
-            </div>
+            <CardTitle className="text-2xl text-gray-900 font-bold">Iniciar Sesión</CardTitle>
+            <CardDescription className="text-gray-600">
+              Ingresa tus credenciales para acceder
+            </CardDescription>
           </div>
+        </CardHeader>
+        
+        <CardContent className="px-8 pb-8">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-gray-700 font-medium">Usuario</Label>
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#0D94B1]/20 to-[#4DB1C6]/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#0D94B1]/60 z-10" />
+                  <Input
+                    id="email"
+                    type="text"
+                    placeholder="Ingresa tu usuario"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="relative pl-11 pr-4 py-6 border-2 border-gray-200 focus:border-[#0D94B1] focus:ring-4 focus:ring-[#0D94B1]/10 rounded-lg transition-all"
+                    required
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-gray-700 font-medium">Contraseña</Label>
+                <div className="relative group">
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#0D94B1]/20 to-[#4DB1C6]/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-[#0D94B1]/60 z-10" />
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="Ingresa tu contraseña"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="relative pl-11 pr-4 py-6 border-2 border-gray-200 focus:border-[#0D94B1] focus:ring-4 focus:ring-[#0D94B1]/10 rounded-lg transition-all"
+                    required
+                  />
+                </div>
+              </div>
+            </div>
 
-          {error && (
-            <Alert variant="destructive" className="bg-red-950/50 border-red-900/50 backdrop-blur">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription className="ml-2">{error}</AlertDescription>
-            </Alert>
-          )}
-
-          <Button
-            type="submit"
-            className="w-full bg-gradient-to-r from-[#0D94B1] to-[#4DB1C6] hover:from-[#0D94B1] hover:to-[#0D94B1] text-white font-medium shadow-lg shadow-[#0D94B1]/30 transition-all duration-200 hover:shadow-xl hover:shadow-[#0D94B1]/40"
-            disabled={loading}
-          >
-            {loading ? (
-              <span className="flex items-center gap-2">
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                Iniciando sesión...
-              </span>
-            ) : (
-              "Iniciar Sesión"
+            {error && (
+              <Alert variant="destructive" className="bg-red-50 border-2 border-red-200 text-red-700 animate-in slide-in-from-top-2">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="font-medium">{error}</AlertDescription>
+              </Alert>
             )}
-          </Button>
 
-          {/* Panel informativo removido por solicitud */}
-        </form>
-      </CardContent>
-    </Card>
+            <Button 
+              type="submit" 
+              className="w-full bg-gradient-to-r from-[#0D94B1] to-[#4DB1C6] hover:from-[#0B7A96] hover:to-[#3A9FB8] text-white py-6 rounded-lg font-semibold shadow-lg shadow-[#0D94B1]/30 hover:shadow-xl hover:shadow-[#0D94B1]/40 transition-all transform hover:-translate-y-0.5" 
+              disabled={loading}
+            >
+              {loading ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Iniciando sesión...
+                </div>
+              ) : (
+                <div className="flex items-center justify-center gap-2">
+                  <span>Iniciar Sesión</span>
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  </svg>
+                </div>
+              )}
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
+    </div>
   )
 }
