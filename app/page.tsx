@@ -24,6 +24,7 @@ export default function LoginPage() {
         <div className="absolute bottom-40 left-40 w-24 h-24 border-2 border-white/20 rounded-full animate-ping" style={{ animationDuration: '3s' }} />
       </div>
 
+<<<<<<< HEAD
       <div className="w-full max-w-5xl mx-auto px-3 sm:px-4 lg:px-6 relative z-10 grid lg:grid-cols-2 gap-1 lg:gap-2 items-center min-h-screen py-6">
         {/* Left side - Hero content */}
         <div className="hidden lg:block text-white">
@@ -34,18 +35,35 @@ export default function LoginPage() {
             </div>
             
             <h1 className="text-4xl xl:text-5xl font-bold leading-tight">
+=======
+      <div className="w-full max-w-6xl mx-auto px-8 relative z-10 grid lg:grid-cols-2 gap-12 items-center">
+        {/* Left side - Hero content */}
+        <div className="hidden lg:block text-white">
+          <div className="space-y-4 text-center -mt-24 mb-16">
+            <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur-sm px-4 py-2 rounded-full border border-white/20">
+              <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+              <span className="text-sm font-medium">Sistema Activo</span>
+            </div>
+            
+            <h1 className="text-6xl font-bold leading-tight">
+>>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
               Bienvenido a<br />
               <span className="bg-gradient-to-r from-white via-white/90 to-white/80 bg-clip-text text-transparent">
                 SIGIA
               </span>
             </h1>
             
+<<<<<<< HEAD
             <p className="text-base xl:text-lg text-white/80 leading-relaxed max-w-sm mx-auto">
+=======
+            <p className="text-xl text-white/80 leading-relaxed">
+>>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
               Sistema Integral de Gestión de Indicadores de Acciona
             </p>
           </div>
 
           {/* Company Logos */}
+<<<<<<< HEAD
           <div className="space-y-4">
             <div className="text-xs text-white/70 font-medium uppercase tracking-wider">
               Empresas Asociadas
@@ -59,24 +77,53 @@ export default function LoginPage() {
                   alt="GMas - Grupo Mas Agua"
                   width={120}
                   height={68}
+=======
+          <div className="space-y-6">
+            <div className="text-sm text-white/70 font-medium uppercase tracking-wider">
+              Empresas Asociadas
+            </div>
+            
+            <div className="grid grid-cols-2 gap-6">
+              {/* GMas Logo */}
+              <div className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:bg-white/15 transition-all group">
+                <Image
+                  src="/logos/gmas-logo.png"
+                  alt="GMas - Grupo Mas Agua"
+                  width={160}
+                  height={90}
+>>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
                   className="object-contain w-full h-auto brightness-0 invert opacity-90 group-hover:opacity-100 transition-opacity"
                 />
               </div>
               
               {/* CAB Logo */}
+<<<<<<< HEAD
               <div className="bg-white/10 backdrop-blur-sm p-4 xl:p-5 rounded-xl border border-white/20 hover:bg-white/15 transition-all group flex items-center justify-center">
                 <Image
                   src="/logos/cab-logo.png"
                   alt="CAB - Compañía de Agua de Boca del Río"
                   width={100}
                   height={56}
+=======
+              <div className="bg-white/10 backdrop-blur-sm p-8 rounded-2xl border border-white/20 hover:bg-white/15 transition-all group flex items-center justify-center">
+                <Image
+                  src="/logos/cab-logo.png"
+                  alt="CAB - Compañía de Agua de Boca del Río"
+                  width={120}
+                  height={68}
+>>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
                   className="object-contain brightness-0 invert opacity-90 group-hover:opacity-100 transition-opacity"
                 />
               </div>
             </div>
             
+<<<<<<< HEAD
             <div className="text-center pt-2">
               <p className="text-white/60 text-xs">
+=======
+            <div className="text-center pt-4">
+              <p className="text-white/60 text-sm">
+>>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
                 Gestión inteligente para empresas de agua
               </p>
             </div>
@@ -84,6 +131,7 @@ export default function LoginPage() {
         </div>
 
         {/* Right side - Login form */}
+<<<<<<< HEAD
         <div className="w-full max-w-xs sm:max-w-sm mx-auto lg:mx-0 lg:ml-auto lg:max-w-sm">
           {/* Mobile header */}
           <div className="lg:hidden text-center mb-4 sm:mb-6 space-y-1.5 sm:space-y-2">
@@ -91,6 +139,15 @@ export default function LoginPage() {
               SIGIA
             </h1>
             <p className="text-white/90 text-xs sm:text-sm">
+=======
+        <div className="w-full max-w-md mx-auto lg:mx-0">
+          {/* Mobile header */}
+          <div className="lg:hidden text-center mb-8 space-y-3">
+            <h1 className="text-5xl font-bold text-white drop-shadow-lg">
+              SIGIA
+            </h1>
+            <p className="text-white/90 text-sm">
+>>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
               Sistema Integral de Gestión de Indicadores
             </p>
           </div>
@@ -98,6 +155,7 @@ export default function LoginPage() {
           <LoginForm />
 
           {/* Powered by Acciona */}
+<<<<<<< HEAD
           <div className="mt-4 sm:mt-6 flex flex-col items-center justify-center gap-1.5 sm:gap-2">
             <span className="text-white/60 text-[9px] font-medium uppercase tracking-wider">Powered by</span>
             <Image
@@ -105,6 +163,15 @@ export default function LoginPage() {
               alt="Acciona"
               width={100}
               height={30}
+=======
+          <div className="mt-8 flex flex-col items-center justify-center gap-3">
+            <span className="text-white/60 text-[10px] font-medium uppercase tracking-wider">Powered by</span>
+            <Image
+              src="/logos/aciona-logo.png"
+              alt="Acciona"
+              width={140}
+              height={42}
+>>>>>>> 42383bd6d48807514e4455e87ccc3fe00b4ac67b
               className="object-contain opacity-80 brightness-0 invert"
             />
           </div>
