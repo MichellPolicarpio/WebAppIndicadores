@@ -29,28 +29,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Additional Info Cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Últimas Actualizaciones</h3>
-          <div className="space-y-3">
-            {[
-              { title: "Indicador de consumo actualizado", time: "Hace 2 horas" },
-              { title: "Nuevo objetivo agregado", time: "Hace 5 horas" },
-              { title: "Reporte mensual generado", time: "Hace 1 día" },
-            ].map((item, i) => (
-              <div key={i} className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                <div className="w-2 h-2 bg-sky-500 rounded-full mt-2" />
-                <div className="flex-1">
-                  <p className="text-sm text-gray-900">{item.title}</p>
-                  <p className="text-xs text-gray-500 mt-1">{item.time}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
+      {/* Accesos Rápidos */}
+      <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Accesos Rápidos</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
@@ -72,7 +52,6 @@ export default function DashboardPage() {
               )
             })}
           </div>
-        </div>
       </div>
     </div>
   )

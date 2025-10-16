@@ -63,7 +63,7 @@ export function LoginForm() {
 
   if (showSplash) {
     return (
-      <div className="fixed inset-0 bg-gradient-to-br from-[#F6FAFB] via-[#8BC8D5] to-[#4DB1C6] flex items-center justify-center z-50 animate-in fade-in duration-300">
+      <div className="fixed inset-0 bg-gradient-to-br from-[#F6FAFB] via-[#8BC8D5] to-[#4DB1C6] flex flex-col items-center justify-center z-50 animate-in fade-in duration-300">
         <div className="text-center space-y-8">
           <div className="relative">
             {/* Outer spinning ring */}
@@ -79,7 +79,7 @@ export function LoginForm() {
           </div>
           <div className="space-y-3">
             <h2 className="text-4xl font-bold text-[#0B6170] drop-shadow-[0_2px_2px_rgba(0,0,0,0.08)]">
-              SIGI
+              SIGIA
             </h2>
             <p className="text-[#0B6170] text-sm">Cargando tu espacio de trabajo...</p>
             <div className="flex items-center justify-center gap-1">
@@ -88,6 +88,18 @@ export function LoginForm() {
               <div className="w-2 h-2 bg-[#0D94B1] rounded-full animate-bounce delay-200" />
             </div>
           </div>
+        </div>
+        
+        {/* Powered by Acciona */}
+        <div className="absolute bottom-12 flex flex-col items-center justify-center gap-3">
+          <span className="text-white/70 text-[10px] font-medium uppercase tracking-wider">Powered by</span>
+          <img
+            src="/logos/aciona-logo.png"
+            alt="Acciona"
+            width={140}
+            height={42}
+            className="object-contain opacity-90 brightness-0 invert"
+          />
         </div>
       </div>
     )

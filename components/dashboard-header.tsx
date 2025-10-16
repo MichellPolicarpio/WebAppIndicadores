@@ -42,14 +42,14 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle }: Dashboard
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-xl">
                   <HelpCircle className="h-6 w-6 text-sky-500" />
-                  Acerca de SIVEG
+                  Acerca de SIGIA
                 </DialogTitle>
               </DialogHeader>
               <div className="text-left space-y-4 pt-4">
                 <div>
-                  <h3 className="text-sky-900 font-semibold mb-2">¿Qué es SIVEG?</h3>
+                  <h3 className="text-sky-900 font-semibold mb-2">¿Qué es SIGIA?</h3>
                   <p className="text-sky-700 text-sm">
-                    SIVEG (Sistema Integral de Visualización y Evaluación de Gestión) es una plataforma diseñada para
+                    SIGIA (Sistema Integral de Gestión de Indicadores de Acciona) es una plataforma diseñada para
                     las empresas de agua GMas (Grupo Mas Agua) y CAB (Compañía de Agua del Municipio de Boca del Río)
                     que permite gestionar, visualizar y evaluar indicadores de desempeño operacional.
                   </p>

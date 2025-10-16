@@ -1,3 +1,5 @@
+// API: Login de usuarios
+
 import { NextRequest, NextResponse } from 'next/server'
 import { authenticateUser } from '@/lib/auth'
 
@@ -29,22 +31,21 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Retornar datos del usuario (sin contraseña)
+    // Remover contraseña antes de enviar
     const { contraseña: _, ...userWithoutPassword } = user
 
-    // Guardar usuario en cookie para endpoints del servidor
     const response = NextResponse.json({
       success: true,
       message: 'Login exitoso',
       user: userWithoutPassword
     })
 
-    // Configurar cookie con el usuario (válida por 7 días)
+    // Guardar usuario en cookie (válida 7 días)
     response.cookies.set('user', JSON.stringify(userWithoutPassword), {
-      httpOnly: false, // Permitir acceso desde el cliente también
+      httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24 * 7, // 7 días
+      maxAge: 60 * 60 * 24 * 7,
       path: '/'
     })
 

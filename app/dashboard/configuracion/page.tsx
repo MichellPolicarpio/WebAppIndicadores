@@ -16,13 +16,12 @@ export default function ConfiguracionPage() {
   const [user, setUser] = useState<User | null>(null)
   const [saved, setSaved] = useState(false)
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-    department: "",
-    notifications: true,
-    emailNotifications: true,
-    reportFrequency: "weekly",
+    nombres: "",
+    apellidoPaterno: "",
+    apellidoMaterno: "",
+    correo: "",
+    usuario: "",
+    gerencia: "",
   })
 
   useEffect(() => {
@@ -30,20 +29,49 @@ export default function ConfiguracionPage() {
     if (currentUser) {
       setUser(currentUser)
       setFormData({
-        name: currentUser.name,
-        email: currentUser.email,
-        phone: "+52 229 123 4567",
-        department: currentUser.gerencia,
-        notifications: true,
-        emailNotifications: true,
-        reportFrequency: "weekly",
+        nombres: currentUser.nombres || "",
+        apellidoPaterno: currentUser.apellidoPaterno || "",
+        apellidoMaterno: currentUser.apellidoMaterno || "",
+        correo: currentUser.correo || "",
+        usuario: currentUser.usuario || "",
+        gerencia: currentUser.gerencia || "",
       })
     }
   }, [])
 
-  const handleSave = () => {
-    setSaved(true)
-    setTimeout(() => setSaved(false), 3000)
+  const handleSave = async () => {
+    if (!user) return
+
+    try {
+      const res = await fetch(`/api/users/${user.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          nombres: formData.nombres,
+          apellidoPaterno: formData.apellidoPaterno,
+          apellidoMaterno: formData.apellidoMaterno,
+          correo: formData.correo,
+        }),
+      })
+
+      const json = await res.json()
+
+      if (!json.success) {
+        throw new Error(json.message || 'Error al guardar')
+      }
+
+      // Actualizar localStorage con nuevos datos
+      if (json.user) {
+        localStorage.setItem('user', JSON.stringify(json.user))
+        setUser(json.user)
+      }
+
+      setSaved(true)
+      setTimeout(() => setSaved(false), 3000)
+    } catch (error: any) {
+      console.error('Error al guardar:', error)
+      alert(error.message || 'Error al guardar los cambios')
+    }
   }
 
   if (!user) return null
@@ -72,13 +100,6 @@ export default function ConfiguracionPage() {
             <Building2 className="h-4 w-4 mr-2" />
             Empresa
           </TabsTrigger>
-          <TabsTrigger
-            value="notificaciones"
-            className="data-[state=active]:bg-sky-100 data-[state=active]:text-sky-900 text-gray-700"
-          >
-            <Bell className="h-4 w-4 mr-2" />
-            Notificaciones
-          </TabsTrigger>
           <TabsTrigger value="seguridad" className="data-[state=active]:bg-sky-100 data-[state=active]:text-sky-900 text-gray-700">
             <Shield className="h-4 w-4 mr-2" />
             Seguridad
@@ -102,49 +123,77 @@ export default function ConfiguracionPage() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-gray-700">
-                    Nombre Completo
+                  <Label htmlFor="usuario" className="text-gray-700">
+                    Usuario
                   </Label>
                   <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="bg-white border-gray-300 text-gray-900"
+                    id="usuario"
+                    value={formData.usuario}
+                    disabled
+                    className="bg-gray-100 border-gray-300 text-gray-500"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-gray-700">
+                  <Label htmlFor="correo" className="text-gray-700">
                     Correo Electrónico
                   </Label>
                   <Input
-                    id="email"
+                    id="correo"
                     type="email"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    value={formData.correo}
+                    onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
                     className="bg-white border-gray-300 text-gray-900"
+                    placeholder="correo@ejemplo.com"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone" className="text-gray-700">
-                    Teléfono
+                  <Label htmlFor="nombres" className="text-gray-700">
+                    Nombre(s)
                   </Label>
                   <Input
-                    id="phone"
-                    value={formData.phone}
-                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                    id="nombres"
+                    value={formData.nombres}
+                    onChange={(e) => setFormData({ ...formData, nombres: e.target.value })}
                     className="bg-white border-gray-300 text-gray-900"
+                    placeholder="Nombre(s)"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="department" className="text-gray-700">
+                  <Label htmlFor="apellidoPaterno" className="text-gray-700">
+                    Apellido Paterno
+                  </Label>
+                  <Input
+                    id="apellidoPaterno"
+                    value={formData.apellidoPaterno}
+                    onChange={(e) => setFormData({ ...formData, apellidoPaterno: e.target.value })}
+                    className="bg-white border-gray-300 text-gray-900"
+                    placeholder="Apellido Paterno"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="apellidoMaterno" className="text-gray-700">
+                    Apellido Materno
+                  </Label>
+                  <Input
+                    id="apellidoMaterno"
+                    value={formData.apellidoMaterno}
+                    onChange={(e) => setFormData({ ...formData, apellidoMaterno: e.target.value })}
+                    className="bg-white border-gray-300 text-gray-900"
+                    placeholder="Apellido Materno"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="gerencia" className="text-gray-700">
                     Gerencia
                   </Label>
                   <Input
-                    id="department"
-                    value={formData.department}
+                    id="gerencia"
+                    value={formData.gerencia}
                     disabled
                     className="bg-gray-100 border-gray-300 text-gray-500"
                   />
@@ -206,84 +255,6 @@ export default function ConfiguracionPage() {
                     className="bg-gray-100 border-gray-300 text-gray-500"
                   />
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="notificaciones" className="space-y-6">
-          <Card className="border-gray-200 bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Preferencias de Notificaciones</CardTitle>
-              <CardDescription className="text-gray-600">
-                Configura cómo y cuándo deseas recibir notificaciones
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Bell className="h-4 w-4 text-blue-500" />
-                    <Label htmlFor="notifications" className="text-slate-200 font-medium">
-                      Notificaciones del Sistema
-                    </Label>
-                  </div>
-                  <p className="text-sm text-gray-600">Recibe alertas sobre cambios en indicadores y objetivos</p>
-                </div>
-                <Switch
-                  id="notifications"
-                  checked={formData.notifications}
-                  onCheckedChange={(checked) => setFormData({ ...formData, notifications: checked })}
-                />
-              </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2">
-                    <Mail className="h-4 w-4 text-blue-500" />
-                    <Label htmlFor="emailNotifications" className="text-slate-200 font-medium">
-                      Notificaciones por Email
-                    </Label>
-                  </div>
-                  <p className="text-sm text-gray-600">Recibe resúmenes y reportes por correo electrónico</p>
-                </div>
-                <Switch
-                  id="emailNotifications"
-                  checked={formData.emailNotifications}
-                  onCheckedChange={(checked) => setFormData({ ...formData, emailNotifications: checked })}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="reportFrequency" className="text-gray-700">
-                  Frecuencia de Reportes
-                </Label>
-                <Select
-                  value={formData.reportFrequency}
-                  onValueChange={(value) => setFormData({ ...formData, reportFrequency: value })}
-                >
-                  <SelectTrigger className="bg-white border-gray-300 text-gray-900">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-gray-100 border-slate-700">
-                    <SelectItem value="daily" className="text-gray-900 focus:bg-slate-700">
-                      Diario
-                    </SelectItem>
-                    <SelectItem value="weekly" className="text-gray-900 focus:bg-slate-700">
-                      Semanal
-                    </SelectItem>
-                    <SelectItem value="monthly" className="text-gray-900 focus:bg-slate-700">
-                      Mensual
-                    </SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="flex justify-end pt-4">
-                <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-                  <Save className="h-4 w-4 mr-2" />
-                  Guardar Preferencias
-                </Button>
               </div>
             </CardContent>
           </Card>

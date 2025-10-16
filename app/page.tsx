@@ -1,4 +1,5 @@
 import { LoginForm } from "@/components/login-form"
+import Image from "next/image"
 
 export default function LoginPage() {
   return (
@@ -10,20 +11,32 @@ export default function LoginPage() {
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#0D94B1] rounded-full blur-3xl animate-pulse delay-500 opacity-30" />
       </div>
 
-      <div className="w-full max-w-md p-8 relative z-10 -mt-14 sm:-mt-20">
-        <div className="text-center mb-3 sm:mb-5 space-y-2 -mt-5">
+      <div className="w-full max-w-md p-8 relative z-10 mt-4 sm:mt-0">
+        <div className="text-center mb-8 sm:mb-10 space-y-2">
           <div className="inline-block">
             <h1 className="text-5xl sm:text-6xl font-bold text-[#0B6170] drop-shadow-[0_2px_2px_rgba(0,0,0,0.08)] mb-2">
-              SIGI
+              SIGIA
             </h1>
             <div className="h-1.5 rounded-full bg-gradient-to-r from-[#0D94B1] via-[#4DB1C6] to-[#8BC8D5]" />
           </div>
           <p className="text-[#0B6170] text-sm leading-relaxed max-w-sm mx-auto">
-            Sistema Integral de Gestión de Indicadores
+            Sistema Integral de Gestión de Indicadores de Acciona
           </p>
           <p className="text-[#0B6170]/80 text-xs">Gestión inteligente para empresas de agua</p>
         </div>
         <LoginForm />
+        
+        {/* Powered by Acciona */}
+        <div className="mt-32 flex flex-col items-center justify-center gap-3">
+          <span className="text-white/70 text-[10px] font-medium uppercase tracking-wider">Powered by</span>
+          <Image
+            src="/logos/aciona-logo.png"
+            alt="Acciona"
+            width={140}
+            height={42}
+            className="object-contain opacity-90 brightness-0 invert"
+          />
+        </div>
       </div>
     </div>
   )

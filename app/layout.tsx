@@ -5,9 +5,9 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'SIVEG - Sistema Integral de Visualización y Evaluación de Gestión',
-  description: 'Sistema de gestión para empresas de agua GMas y CAB',
-  generator: 'SIVEG',
+  title: 'SIGIA - Sistema Integral de Gestión de Indicadores de Acciona',
+  description: 'Sistema de gestión de indicadores para empresas de agua GMas y CAB',
+  generator: 'SIGIA',
 }
 
 export default function RootLayout({
