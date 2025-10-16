@@ -68,7 +68,7 @@ export async function closeConnection(): Promise<void> {
 }
 
 // Función para ejecutar consultas
-export async function executeQuery(query: string, params?: any[]): Promise<any[]> {
+export async function executeQuery(query: string, params?: any[] | Record<string, any>): Promise<any[]> {
   if (typeof window !== 'undefined') {
     throw new Error('Esta función solo puede ejecutarse en el servidor')
   }
@@ -79,16 +79,22 @@ export async function executeQuery(query: string, params?: any[]): Promise<any[]
     
     // Agregar parámetros si existen
     if (params) {
-      // Para consultas con @usuario, @contraseña, @id, etc.
-      if (query.includes('@usuario') && query.includes('@contraseña')) {
-        request.input('usuario', params[0])
-        request.input('contraseña', params[1])
-      } else if (query.includes('@id')) {
-        request.input('id', params[0])
+      if (Array.isArray(params)) {
+        // Compatibilidad con el uso anterior basado en arrays
+        if (query.includes('@usuario') && query.includes('@contraseña')) {
+          request.input('usuario', params[0])
+          request.input('contraseña', params[1])
+        } else if (query.includes('@id')) {
+          request.input('id', params[0])
+        } else {
+          params.forEach((param, index) => {
+            request.input(`param${index}`, param)
+          })
+        }
       } else {
-        // Fallback para otros casos
-        params.forEach((param, index) => {
-          request.input(`param${index}`, param)
+        // Nuevo: parámetros nombrados como objeto clave/valor
+        Object.entries(params).forEach(([key, value]) => {
+          request.input(key, value)
         })
       }
     }

@@ -1,12 +1,10 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Plus, Pencil, Check, X, History, Trash2, AlertCircle } from "lucide-react"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ArrowLeft, Pencil, History, Trash2 } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -18,164 +16,71 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 
-interface Variable {
-  id: string
-  nombre: string
-  valor: string
+interface VariableRow {
+  id_Variable_EmpresaGerencia_Hechos: number
+  id_Variable_Empresa_Gerencia: number
+  id_Empresa_Gerencia: number
+  id_Variable: number
+  nombreVariable: string
   periodo: string
+  valor: number
+  nombreEmpresaOperadora: string
 }
 
-export default function AgregarVariablePage() {
+export default function VariablesPage() {
   const router = useRouter()
-
-  const getCurrentDate = () => {
-    const now = new Date()
-    return {
-      month: now.getMonth(), // 0-11
-      year: now.getFullYear(),
-    }
-  }
-
-  const getMonthName = (monthIndex: number) => {
-    const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"]
-    return months[monthIndex]
-  }
-
-  const generateAvailableMonths = () => {
-    const current = getCurrentDate()
-    const months = []
-
-    // Generate months from January of current year to current month
-    for (let i = 0; i <= current.month; i++) {
-      months.push({
-        value: getMonthName(i),
-        index: i,
-        year: current.year,
-      })
-    }
-
-    return months
-  }
-
-  const generateYears = () => {
-    const currentYear = new Date().getFullYear()
-    return [currentYear - 2, currentYear - 1, currentYear]
-  }
-
-  const [currentDate] = useState(getCurrentDate())
-  const [availableMonths] = useState(generateAvailableMonths())
-  const [years] = useState(generateYears())
-
-  const [variables, setVariables] = useState<Variable[]>([
-    {
-      id: "1",
-      nombre: "Número de acometidas",
-      valor: "12,345",
-      periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
-    },
-    {
-      id: "2",
-      nombre: "Número de clientes",
-      valor: "10,152",
-      periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
-    },
-    {
-      id: "3",
-      nombre: "Clientes domésticos",
-      valor: "8,205",
-      periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
-    },
-    {
-      id: "4",
-      nombre: "Número de clientes con servicio medido",
-      valor: "44,501",
-      periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
-    },
-    {
-      id: "5",
-      nombre: "Número de clientes con servicio de cuota fija",
-      valor: "16,210",
-      periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
-    },
-    {
-      id: "6",
-      nombre: "Número de clientes servicio suspendido",
-      valor: "4,501",
-      periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
-    },
-    {
-      id: "7",
-      nombre: "Facturación total con IVA (mxp)",
-      valor: "123,456",
-      periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
-    },
-  ])
-
-  const [selectedMonth, setSelectedMonth] = useState(getMonthName(currentDate.month))
-  const [selectedYear, setSelectedYear] = useState(currentDate.year.toString())
-  const [editingId, setEditingId] = useState<string | null>(null)
-  const [editValue, setEditValue] = useState("")
+  const [variables, setVariables] = useState<VariableRow[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState("")
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
-  const [itemToDelete, setItemToDelete] = useState<string | null>(null)
-  const [validationError, setValidationError] = useState<string>("")
+  const [itemToDelete, setItemToDelete] = useState<number | null>(null)
 
-  const handleEdit = (variable: Variable) => {
-    setEditingId(variable.id)
-    setEditValue(variable.valor)
-  }
-
-  const handleSaveEdit = (id: string) => {
-    if (!editValue.trim()) {
-      setValidationError("El valor no puede estar vacío")
-      return
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setIsLoading(true)
+        setError("")
+        const res = await fetch(`/api/variables`, { cache: 'no-store' })
+        const json = await res.json()
+        if (!json.success) throw new Error(json.message || 'Error')
+        setVariables(json.data || [])
+      } catch (e: any) {
+        setError(e.message || 'Error cargando variables')
+      } finally {
+        setIsLoading(false)
+      }
     }
+    fetchData()
+  }, [])
 
-    if (isNaN(Number(editValue.replace(/,/g, "")))) {
-      setValidationError("El valor debe ser un número válido")
-      return
-    }
-
-    setVariables(variables.map((v) => (v.id === id ? { ...v, valor: editValue } : v)))
-    setEditingId(null)
-    setValidationError("")
+  const formatPeriodo = (periodo: string) => {
+    const d = new Date(periodo)
+    const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
+    return `${meses[d.getMonth()]} ${d.getFullYear()}`
   }
 
-  const handleCancelEdit = () => {
-    setEditingId(null)
-    setEditValue("")
-    setValidationError("")
-  }
-
-  const handleAddNew = () => {
-    const nextMonth = currentDate.month + 1
-    const nextYear = nextMonth > 11 ? currentDate.year + 1 : currentDate.year
-    const nextMonthName = getMonthName(nextMonth > 11 ? 0 : nextMonth)
-
-    const newVariable: Variable = {
-      id: Date.now().toString(),
-      nombre: "Nueva variable",
-      valor: "0",
-      periodo: `${nextMonthName} ${nextYear}`,
-    }
-    setVariables([...variables, newVariable])
-  }
-
-  const handleDeleteClick = (id: string) => {
+  const handleDeleteClick = (id: number) => {
     setItemToDelete(id)
     setDeleteDialogOpen(true)
   }
 
   const handleConfirmDelete = () => {
     if (itemToDelete) {
-      setVariables(variables.filter((v) => v.id !== itemToDelete))
+      setVariables(variables.filter((v) => v.id_Variable_EmpresaGerencia_Hechos !== itemToDelete))
+      // TODO: Aquí deberías hacer un DELETE a la API
     }
     setDeleteDialogOpen(false)
     setItemToDelete(null)
   }
 
-  const handleViewHistory = (id: string) => {
-    // TODO: Implement history view functionality
-    console.log("Ver histórico de variable:", id)
+  const handleViewHistory = (idVariableEmpresaGerencia: number) => {
+    // TODO: Abrir modal o navegar a página de histórico
+    console.log("Ver histórico de variable:", idVariableEmpresaGerencia)
+  }
+
+  const handleEdit = (row: VariableRow) => {
+    // TODO: Abrir modal de edición
+    console.log("Editar variable:", row)
   }
 
   return (
@@ -190,145 +95,80 @@ export default function AgregarVariablePage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Valores Guardados</h1>
-          <p className="text-gray-600 mt-1">Gestiona las variables del sistema</p>
+          <h1 className="text-3xl font-bold text-gray-900">Variables del Último Periodo</h1>
+          <p className="text-gray-600 mt-1">Valores más recientes registrados por variable</p>
         </div>
       </div>
 
-      <Card className="border-gray-200 bg-white">
-        <CardHeader className="border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-gray-900">Variables guardadas: {variables.length}/25</CardTitle>
-              <CardDescription className="text-gray-600">
-                Administra los valores de las variables por periodo
-              </CardDescription>
-            </div>
-            <div className="flex items-center gap-2">
-              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="w-24 bg-white border-gray-300 text-gray-900">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-200">
-                  {availableMonths.map((month) => (
-                    <SelectItem key={month.value} value={month.value} className="text-gray-900 focus:bg-gray-100">
-                      {month.value}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="w-24 bg-white border-gray-300 text-gray-900">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-gray-200">
-                  {years.map((year) => (
-                    <SelectItem key={year} value={year.toString()} className="text-gray-900 focus:bg-gray-100">
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button onClick={handleAddNew} className="bg-blue-600 hover:bg-blue-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar Variable
-              </Button>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent className="p-0">
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Variable</th>
-                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Valor</th>
-                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Periodo</th>
-                  <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {variables.map((variable) => (
-                  <tr key={variable.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-6 py-4 text-sm text-gray-900">{variable.nombre}</td>
-                    <td className="px-6 py-4 text-sm">
-                      {editingId === variable.id ? (
-                        <div className="space-y-1">
-                          <Input
-                            value={editValue}
-                            onChange={(e) => setEditValue(e.target.value)}
-                            className="w-32 bg-white border-gray-300 text-gray-900"
-                            autoFocus
-                          />
-                          {validationError && editingId === variable.id && (
-                            <div className="flex items-center gap-1 text-xs text-red-600">
-                              <AlertCircle className="h-3 w-3" />
-                              {validationError}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-gray-900 font-medium">{variable.valor}</span>
-                      )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-500">{variable.periodo}</td>
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-2">
-                        {editingId === variable.id ? (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => handleSaveEdit(variable.id)}
-                              className="bg-green-600 hover:bg-green-700 h-8 px-3"
-                            >
-                              <Check className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleCancelEdit}
-                              className="text-gray-600 hover:text-gray-900 hover:bg-gray-100 h-8 px-3"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => handleEdit(variable)}
-                              className="bg-amber-600 hover:bg-amber-700 h-8 px-3"
-                              title="Editar"
-                            >
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleViewHistory(variable.id)}
-                              className="bg-purple-600 hover:bg-purple-700 h-8 px-3"
-                              title="Ver Histórico"
-                            >
-                              <History className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleDeleteClick(variable.id)}
-                              className="bg-red-600 hover:bg-red-700 h-8 px-3"
-                              title="Eliminar"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+      {error && (
+        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
+          {error}
+        </div>
+      )}
+
+      {isLoading ? (
+        <div className="text-center py-12 text-gray-500">Cargando variables...</div>
+      ) : (
+        <Card className="border-gray-200 bg-white">
+          <CardHeader className="border-b border-gray-200">
+            <CardTitle className="text-gray-900">Variables: {variables.length}</CardTitle>
+            <CardDescription className="text-gray-600">
+              Último periodo registrado
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-0">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Variable</th>
+                    <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Valor</th>
+                    <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Periodo</th>
+                    <th className="text-left px-6 py-3 text-sm font-semibold text-gray-700">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {variables.map((row) => (
+                    <tr key={row.id_Variable_EmpresaGerencia_Hechos} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-gray-900">{row.nombreVariable}</td>
+                      <td className="px-6 py-4 text-sm text-gray-900 font-medium">{row.valor}</td>
+                      <td className="px-6 py-4 text-sm text-gray-500">{formatPeriodo(row.periodo)}</td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => handleEdit(row)}
+                            className="bg-amber-600 hover:bg-amber-700 h-8 px-3"
+                            title="Editar"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleViewHistory(row.id_Variable_Empresa_Gerencia)}
+                            className="bg-purple-600 hover:bg-purple-700 h-8 px-3"
+                            title="Ver Histórico"
+                          >
+                            <History className="h-3.5 w-3.5" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleDeleteClick(row.id_Variable_EmpresaGerencia_Hechos)}
+                            className="bg-red-600 hover:bg-red-700 h-8 px-3"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex justify-start">
         <Button

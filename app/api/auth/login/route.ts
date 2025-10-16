@@ -32,11 +32,23 @@ export async function POST(request: NextRequest) {
     // Retornar datos del usuario (sin contraseña)
     const { contraseña: _, ...userWithoutPassword } = user
 
-    return NextResponse.json({
+    // Guardar usuario en cookie para endpoints del servidor
+    const response = NextResponse.json({
       success: true,
       message: 'Login exitoso',
       user: userWithoutPassword
     })
+
+    // Configurar cookie con el usuario (válida por 7 días)
+    response.cookies.set('user', JSON.stringify(userWithoutPassword), {
+      httpOnly: false, // Permitir acceso desde el cliente también
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 7, // 7 días
+      path: '/'
+    })
+
+    return response
 
   } catch (error) {
     console.error('Error en login:', error)
