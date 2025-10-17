@@ -378,23 +378,6 @@ export default function ConfiguracionPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-gray-200 bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Sesiones Activas</CardTitle>
-              <CardDescription className="text-gray-600">Dispositivos donde has iniciado sesión</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between p-4 bg-gray-100 rounded-lg">
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">Navegador Actual</p>
-                    <p className="text-xs text-gray-600">Veracruz, México • Activo ahora</p>
-                  </div>
-                  <span className="text-xs text-green-400 font-medium">Activo</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
         </TabsContent>
       </Tabs>
       </div>
