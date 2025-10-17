@@ -64,14 +64,18 @@ export default function LoginPage() {
               </div>
               
               {/* CAB Logo */}
-              <div className="bg-white/10 backdrop-blur-sm p-4 xl:p-5 rounded-xl border border-white/20 hover:bg-white/15 transition-all group flex items-center justify-center">
+              <div className="bg-white/10 backdrop-blur-sm p-4 xl:p-5 rounded-xl border border-white/20 hover:bg-white/15 transition-all group flex flex-col items-center justify-center">
                 <Image
                   src="/logos/cab-logo.png"
                   alt="CAB - Compañía de Agua de Boca del Río"
-                  width={100}
-                  height={56}
-                  className="object-contain brightness-0 invert opacity-90 group-hover:opacity-100 transition-opacity"
+                  width={140}
+                  height={80}
+                  className="object-contain brightness-0 invert opacity-90 group-hover:opacity-100 transition-opacity mt-4"
                 />
+                <p className="text-white text-xs font-normal mt-0.5 text-center leading-tight">
+                  Compañía del Agua<br />
+                  Municipio de Boca del Río
+                </p>
               </div>
             </div>
             
