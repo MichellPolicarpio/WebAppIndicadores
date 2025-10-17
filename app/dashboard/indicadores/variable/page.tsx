@@ -415,7 +415,7 @@ export default function VariablesPage() {
         </Card>
       ) : (
         <Card className="border-gray-200 bg-white shadow-md">
-          <CardHeader className="border-b border-gray-200 bg-gradient-to-r from-blue-50 to-white">
+          <CardHeader className="border-b border-gray-200 bg-white">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div>
                 <CardTitle className="text-xl sm:text-2xl text-gray-900">
@@ -425,7 +425,7 @@ export default function VariablesPage() {
                   {variables.length} indicador{variables.length !== 1 ? 'es' : ''} • {getMonthYear(selectedMonth)}
                 </CardDescription>
               </div>
-              <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">
+              <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold">
                 {variables.length} Registro{variables.length !== 1 ? 's' : ''}
               </div>
             </div>
