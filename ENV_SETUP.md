@@ -13,7 +13,7 @@ DB_PASSWORD=tu_contraseña_real_aqui
 DB_PORT=1433
 
 # Configuración de la aplicación
-NEXT_PUBLIC_APP_NAME=SIVEG
+NEXT_PUBLIC_APP_NAME=SIGIA
 NEXT_PUBLIC_APP_VERSION=1.0.0
 
 # Configuración de autenticación

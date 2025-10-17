@@ -8,7 +8,7 @@ export const env = {
     port: parseInt(process.env.DB_PORT || '1433'),
   },
   app: {
-    name: process.env.NEXT_PUBLIC_APP_NAME || 'SIVEG',
+    name: process.env.NEXT_PUBLIC_APP_NAME || 'SIGIA',
     version: process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0',
   },
   auth: {

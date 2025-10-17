@@ -38,6 +38,13 @@ export default function DashboardLayout({
     }
   }, [router])
 
+  // Forzar scroll al tope al entrar a /dashboard para evitar saltos (siempre declarado)
+  useEffect(() => {
+    if (pathname === "/dashboard") {
+      window.scrollTo({ top: 0, left: 0, behavior: "instant" as ScrollBehavior })
+    }
+  }, [pathname])
+
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-950">
@@ -58,7 +65,7 @@ export default function DashboardLayout({
         <main className={`transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64 md:ml-52 lg:ml-64"}`}>
           {/* Widget persistente: se mantiene montado para evitar recargas al volver al dashboard */}
           <div className="p-6 bg-[#F6FAFB]">
-            <div className={pathname === "/dashboard" ? "block" : "hidden"}>
+            <div className={pathname === "/dashboard" ? "block" : "hidden"} style={{ overflowAnchor: "none" }}>
               <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-6">
                 <div className="border-b border-gray-200 p-4">
                   <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">

@@ -66,7 +66,7 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
               {user.company === "GMas" ? "GM" : "CAB"}
             </div>
             <div className="min-w-0">
-              <h1 className="text-white font-semibold text-sm truncate">SIVEG</h1>
+              <h1 className="text-white font-semibold text-sm truncate">SIGIA</h1>
               <p className="text-white/70 text-xs truncate">
                 {user.company} - {user.gerencia}
               </p>

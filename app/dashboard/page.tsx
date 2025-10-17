@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react"
 import { getUser, type User } from "@/lib/auth"
 import { BarChart3 } from "lucide-react"
-import { PowerBIAuthWidget } from "@/components/power-bi-auth-widget"
 
 export default function DashboardPage() {
   const [user, setUser] = useState<User | null>(null)
@@ -14,21 +13,6 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Power BI Widget */}
-      <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden">
-        <div className="border-b border-gray-200 p-4">
-          <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-            <BarChart3 className="h-5 w-5 text-sky-500" />
-            Análisis de Indicadores - Power BI
-          </h2>
-          <p className="text-sm text-gray-600 mt-1">Visualización en tiempo real de los indicadores clave</p>
-        </div>
-
-        <div className="p-6">
-          <PowerBIAuthWidget company={user?.company} />
-        </div>
-      </div>
-
       {/* Accesos Rápidos */}
       <div className="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Accesos Rápidos</h3>
