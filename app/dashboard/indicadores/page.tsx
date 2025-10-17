@@ -21,11 +21,11 @@ export default function IndicadoresPage() {
                 <div className="w-16 h-16 sm:w-20 sm:h-20 bg-sky-100 rounded-full flex items-center justify-center group-hover:bg-sky-200 transition-colors">
                   <FileText className="w-8 h-8 sm:w-10 sm:h-10 text-sky-500" />
                 </div>
-                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Agregar Variable</h2>
+                <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Agregar Indicador</h2>
                 <p className="text-gray-600 text-sm sm:text-base">
-                  Registra y gestiona variables operativas como número de acometidas, clientes, facturación y más.
+                  Registra y gestiona indicadores mensuales como número de acometidas, clientes, facturación y más.
                 </p>
-                <Button className="mt-4 bg-sky-600 hover:bg-sky-700 text-white w-full sm:w-auto">Ir a Variables</Button>
+                <Button className="mt-4 bg-sky-600 hover:bg-sky-700 text-white w-full sm:w-auto">Ir a Indicadores</Button>
               </div>
             </div>
           </Link>

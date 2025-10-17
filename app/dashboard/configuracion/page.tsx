@@ -15,6 +15,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 export default function ConfiguracionPage() {
   const [user, setUser] = useState<User | null>(null)
   const [saved, setSaved] = useState(false)
+  const [passwordSaved, setPasswordSaved] = useState(false)
   const [formData, setFormData] = useState({
     nombres: "",
     apellidoPaterno: "",
@@ -22,6 +23,11 @@ export default function ConfiguracionPage() {
     correo: "",
     usuario: "",
     gerencia: "",
+  })
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
   })
 
   useEffect(() => {
@@ -74,15 +80,58 @@ export default function ConfiguracionPage() {
     }
   }
 
+  const handlePasswordChange = async () => {
+    if (!user) return
+
+    // Validaciones
+    if (!passwordData.currentPassword || !passwordData.newPassword || !passwordData.confirmPassword) {
+      alert("Todos los campos son requeridos")
+      return
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert("Las contraseñas nuevas no coinciden")
+      return
+    }
+
+    if (passwordData.newPassword.length < 6) {
+      alert("La nueva contraseña debe tener al menos 6 caracteres")
+      return
+    }
+
+    try {
+      const response = await fetch("/api/auth/change-password", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+        }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        setPasswordSaved(true)
+        setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" })
+        setTimeout(() => setPasswordSaved(false), 3000)
+      } else {
+        alert(result.message || "Error cambiando contraseña")
+      }
+    } catch (error) {
+      console.error("Error cambiando contraseña:", error)
+      alert("Error interno del servidor")
+    }
+  }
+
   if (!user) return null
 
   return (
     <div className="min-h-screen bg-[#F6FAFB] p-4 sm:p-6">
       <div className="space-y-6 max-w-5xl mx-auto">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Configuración</h1>
-          <p className="text-gray-600">Administra tu cuenta y preferencias del sistema</p>
-        </div>
+        {/* Encabezado redundante removido: el header global ya indica la sección */}
 
       {saved && (
         <Alert className="bg-green-950/50 border-green-900">
@@ -218,10 +267,12 @@ export default function ConfiguracionPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="flex items-center gap-4 p-4 bg-gray-100 rounded-lg">
-                <div
-                  className={`w-16 h-16 rounded-lg ${user.company === "GMas" ? "bg-blue-600" : "bg-cyan-600"} flex items-center justify-center text-gray-900 font-bold text-xl`}
-                >
-                  {user.company === "GMas" ? "GM" : "CAB"}
+                <div className="w-16 h-16 rounded-lg overflow-hidden bg-white flex items-center justify-center shadow-sm">
+                  <img
+                    src={user.company === "GMas" ? "/logos/gmas-logo.png" : "/logos/cab-logo.png"}
+                    alt={`Logo ${user.company}`}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-900">
@@ -269,6 +320,13 @@ export default function ConfiguracionPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
+              {passwordSaved && (
+                <Alert className="border-green-200 bg-green-50">
+                  <AlertDescription className="text-green-800">
+                    ✅ Contraseña actualizada correctamente
+                  </AlertDescription>
+                </Alert>
+              )}
               <div className="space-y-2">
                 <Label htmlFor="currentPassword" className="text-gray-700">
                   Contraseña Actual
@@ -277,6 +335,8 @@ export default function ConfiguracionPage() {
                   id="currentPassword"
                   type="password"
                   placeholder="••••••••"
+                  value={passwordData.currentPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, currentPassword: e.target.value }))}
                   className="bg-white border-gray-300 text-gray-900"
                 />
               </div>
@@ -289,6 +349,8 @@ export default function ConfiguracionPage() {
                   id="newPassword"
                   type="password"
                   placeholder="••••••••"
+                  value={passwordData.newPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
                   className="bg-white border-gray-300 text-gray-900"
                 />
               </div>
@@ -301,12 +363,14 @@ export default function ConfiguracionPage() {
                   id="confirmPassword"
                   type="password"
                   placeholder="••••••••"
+                  value={passwordData.confirmPassword}
+                  onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                   className="bg-white border-gray-300 text-gray-900"
                 />
               </div>
 
               <div className="flex justify-end pt-4">
-                <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
+                <Button onClick={handlePasswordChange} className="bg-blue-600 hover:bg-blue-700">
                   <Save className="h-4 w-4 mr-2" />
                   Actualizar Contraseña
                 </Button>

@@ -100,7 +100,7 @@ export default function VariablesPage() {
       setAvailableMonths(json.periodos || [])
     } catch (e: any) {
       console.error('Error en fetchVariables:', e)
-      setError(e.message || 'Error cargando variables')
+      setError(e.message || 'Error cargando indicadores mensuales')
     } finally {
       setIsLoading(false)
     }
@@ -169,10 +169,10 @@ export default function VariablesPage() {
         throw new Error(json.message || 'Error al eliminar')
       }
 
-      toast.success('Variable eliminada exitosamente')
+      toast.success('Indicador eliminado exitosamente')
       setVariables(variables.filter((v) => v.id_Variable_EmpresaGerencia_Hechos !== itemToDelete))
     } catch (e: any) {
-      toast.error(e.message || 'Error al eliminar la variable')
+      toast.error(e.message || 'Error al eliminar el indicador')
     } finally {
       setDeleteDialogOpen(false)
       setItemToDelete(null)
@@ -221,7 +221,7 @@ export default function VariablesPage() {
       setItemToEdit(null)
       setNewValue("")
     } catch (e: any) {
-      toast.error(e.message || 'Error al actualizar la variable')
+      toast.error(e.message || 'Error al actualizar el indicador')
     } finally {
       setIsSaving(false)
     }
@@ -266,7 +266,7 @@ export default function VariablesPage() {
         </Button>
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Valores Guardados</h1>
-          <p className="text-sm sm:text-base text-gray-600 mt-1">Selecciona un mes para ver las variables</p>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Selecciona un mes para ver los indicadores mensuales</p>
         </div>
       </div>
 
@@ -283,7 +283,7 @@ export default function VariablesPage() {
             </div>
             <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 text-blue-800 px-2.5 py-0.5 rounded-lg text-xs font-bold">
               {variables.length > 0 
-                ? `${variables.length} variable${variables.length !== 1 ? 's' : ''}` 
+                ? `${variables.length} indicador${variables.length !== 1 ? 'es' : ''}` 
                 : 'Sin datos'
               }
             </div>
@@ -371,7 +371,7 @@ export default function VariablesPage() {
           <CardContent className="py-20">
             <div className="flex flex-col items-center justify-center gap-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-              <p className="text-lg text-gray-600">Cargando variables...</p>
+              <p className="text-lg text-gray-600">Cargando indicadores mensuales...</p>
             </div>
           </CardContent>
         </Card>
@@ -380,8 +380,8 @@ export default function VariablesPage() {
           <CardContent className="py-20">
             <div className="flex flex-col items-center justify-center gap-4 text-gray-500">
               <Calendar className="h-16 w-16 opacity-50" />
-              <p className="text-lg font-medium">No hay variables para este mes</p>
-              <p className="text-sm">Selecciona otro mes para ver las variables disponibles</p>
+              <p className="text-lg font-medium">No hay indicadores mensuales para este mes</p>
+              <p className="text-sm">Selecciona otro mes para ver los indicadores disponibles</p>
             </div>
           </CardContent>
         </Card>
@@ -391,10 +391,10 @@ export default function VariablesPage() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
               <div>
                 <CardTitle className="text-xl sm:text-2xl text-gray-900">
-                  Variables del Período
+                  Indicadores Mensuales del Período
                 </CardTitle>
                 <CardDescription className="text-sm sm:text-base text-gray-600 mt-1">
-                  {variables.length} variable{variables.length !== 1 ? 's' : ''} • {getMonthYear(selectedMonth)}
+                  {variables.length} indicador{variables.length !== 1 ? 'es' : ''} • {getMonthYear(selectedMonth)}
                 </CardDescription>
               </div>
               <div className="bg-blue-100 text-blue-800 px-4 py-2 rounded-full text-sm font-semibold">

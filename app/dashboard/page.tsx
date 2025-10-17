@@ -18,7 +18,7 @@ export default function DashboardPage() {
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Accesos Rápidos</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: "Agregar Variable", icon: PlusCircle, href: "/dashboard/indicadores/variable" },
+              { label: "Agregar Indicador", icon: PlusCircle, href: "/dashboard/indicadores/variable" },
               { label: "Agregar Objetivo", icon: PlusCircle, href: "/dashboard/indicadores/objetivo" },
               { label: "Ver Reportes", icon: BarChart3, href: "/dashboard" },
               { label: "Configuración", icon: Settings, href: "/dashboard/configuracion" },

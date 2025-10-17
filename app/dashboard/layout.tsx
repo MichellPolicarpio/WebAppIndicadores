@@ -22,7 +22,7 @@ export default function DashboardLayout({
 
   const getPageTitle = () => {
     if (pathname === "/dashboard") return "Dashboard"
-    if (pathname.startsWith("/dashboard/indicadores/variable")) return "Variables"
+    if (pathname.startsWith("/dashboard/indicadores/variable")) return "Indicadores Mensuales"
     if (pathname.startsWith("/dashboard/indicadores/objetivo")) return "Objetivos"
     if (pathname.startsWith("/dashboard/indicadores")) return "Agregar Indicadores"
     if (pathname.startsWith("/dashboard/configuracion")) return "Configuración"
