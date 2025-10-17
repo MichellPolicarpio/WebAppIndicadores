@@ -4,6 +4,8 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
+import { BarChart3 } from "lucide-react"
+import { PowerBIAuthWidget } from "@/components/power-bi-auth-widget"
 import { getUser, type User } from "@/lib/auth"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
@@ -54,7 +56,25 @@ export default function DashboardLayout({
       <DashboardHeader user={user} sidebarCollapsed={sidebarCollapsed} pageTitle={getPageTitle()} />
       <div className="pt-16">
         <main className={`transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64 md:ml-52 lg:ml-64"}`}>
-          <div className="p-6 bg-[#F6FAFB] min-h-screen">{children}</div>
+          {/* Widget persistente: se mantiene montado para evitar recargas al volver al dashboard */}
+          <div className="p-6 bg-[#F6FAFB]">
+            <div className={pathname === "/dashboard" ? "block" : "hidden"}>
+              <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-6">
+                <div className="border-b border-gray-200 p-4">
+                  <h2 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5 text-sky-500" />
+                    Análisis de Indicadores - Power BI
+                  </h2>
+                  <p className="text-sm text-gray-600 mt-1">Visualización en tiempo real de los indicadores clave</p>
+                </div>
+                <div className="p-6">
+                  <PowerBIAuthWidget company={user?.company} />
+                </div>
+              </div>
+            </div>
+            {/* Contenido de la página */}
+            <div className="bg-[#F6FAFB] min-h-screen">{children}</div>
+          </div>
         </main>
       </div>
     </div>
