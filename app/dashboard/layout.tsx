@@ -66,8 +66,8 @@ export default function DashboardLayout({
         pageTitle={getPageTitle()} 
         onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      <div className="pt-16">
-        <main className={`transition-all duration-300 ml-0 ${sidebarCollapsed ? "md:ml-16" : "md:ml-64 md:md:ml-52 md:lg:ml-64"}`}>
+      <div className="pt-20">
+        <main className={`transition-all duration-300 ml-0 ${sidebarCollapsed ? "md:ml-20" : "md:ml-64 md:md:ml-56 md:lg:ml-64"}`}>
           {/* Widget persistente: se mantiene montado para evitar recargas al volver al dashboard */}
           <div className="p-6 bg-[#F6FAFB]">
             <div className={pathname === "/dashboard" ? "block" : "hidden"} style={{ overflowAnchor: "none" }}>

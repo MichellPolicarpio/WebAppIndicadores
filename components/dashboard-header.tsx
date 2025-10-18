@@ -1,6 +1,6 @@
 "use client"
 
-import { HelpCircle, User, LogOut, Settings, BarChart3, Target, FileText, Info, Menu } from "lucide-react"
+import { HelpCircle, User, LogOut, Settings, BarChart3, Target, FileText, Info, Menu, Bell, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -128,16 +128,16 @@ function getHelpContent(pageTitle?: string) {
 export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSidebar }: DashboardHeaderProps) {
   return (
     <header
-      className={`fixed top-0 right-0 h-16 bg-[#0D94B1] border-b border-[#0B7A96] z-40 transition-all duration-300 left-0 ${sidebarCollapsed ? "md:left-16" : "md:left-64 md:md:left-52 md:lg:left-64"}`}
+      className={`fixed top-0 right-0 h-20 bg-[#0D94B1] border-b border-[#0B7A96] z-40 transition-all duration-300 left-0 ${sidebarCollapsed ? "md:left-20" : "md:left-64 md:md:left-56 md:lg:left-64"} shadow-md`}
     >
       <div className="h-full flex items-center justify-between px-6">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           {/* Botón de hamburguesa para móvil */}
           <Button
             variant="ghost"
             size="icon"
             onClick={onToggleSidebar}
-            className="text-white/80 hover:text-white hover:bg-white/10 md:hidden"
+            className="text-white/80 hover:text-white hover:bg-white/10 md:hidden rounded-xl transition-all duration-200"
             title="Abrir menú"
           >
             <Menu className="h-5 w-5" />
@@ -145,7 +145,7 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSid
           
           {pageTitle && (
             <div>
-              <h2 className="text-xl font-bold text-white uppercase tracking-wide">{pageTitle}</h2>
+              <h2 className="text-2xl font-bold text-white tracking-tight">{pageTitle}</h2>
             </div>
           )}
         </div>
@@ -154,7 +154,11 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSid
           {/* Botón de Ayuda personalizado por sección */}
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white/80 hover:text-white hover:bg-white/10">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+              >
                 <HelpCircle className="h-5 w-5" />
               </Button>
             </DialogTrigger>
@@ -174,7 +178,11 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSid
           {/* Botón Acerca de SIGIA */}
           <Dialog>
             <DialogTrigger asChild>
-              <Button variant="ghost" size="icon" className="text-white/80 hover:text-white hover:bg-white/10">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+              >
                 <Info className="h-5 w-5" />
               </Button>
             </DialogTrigger>
@@ -252,12 +260,12 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSid
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex items-center gap-2 text-white/80 hover:text-white hover:bg-white/10"
+                className="flex items-center gap-3 text-white/80 hover:text-white hover:bg-white/10 rounded-xl px-3 transition-all duration-200"
               >
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+                <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                   <User className="h-4 w-4 text-white" />
                 </div>
-                <span className="text-sm hidden md:inline">{user.name || user.usuario}</span>
+                <span className="text-sm font-medium hidden md:inline">{user.name || user.usuario}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56 bg-white border-gray-200 shadow-lg">

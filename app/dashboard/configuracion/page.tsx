@@ -129,9 +129,8 @@ export default function ConfiguracionPage() {
   if (!user) return null
 
   return (
-    <div className="min-h-screen bg-[#F6FAFB] p-4 sm:p-6">
-      <div className="space-y-6 max-w-5xl mx-auto">
-        {/* Encabezado redundante removido: el header global ya indica la sección */}
+    <div className="space-y-6">
+      {/* Encabezado redundante removido: el header global ya indica la sección */}
 
       {saved && (
         <Alert className="bg-green-950/50 border-green-900">
@@ -380,7 +379,6 @@ export default function ConfiguracionPage() {
 
         </TabsContent>
       </Tabs>
-      </div>
     </div>
   )
 }

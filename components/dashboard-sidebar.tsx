@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, PlusCircle, Settings, Menu, ChevronLeft } from "lucide-react"
+import { Home, PlusCircle, Settings, Menu, ChevronLeft, BarChart3, Building2 } from "lucide-react"
 import Image from "next/image"
 import type { User } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -17,9 +17,11 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
   const pathname = usePathname()
 
   const companyColors = {
-    GMas: "bg-gradient-to-r from-green-600 to-blue-600",
-    CAB: "bg-gradient-to-r from-blue-600 to-cyan-600",
+    GMas: "from-emerald-600 to-teal-600",
+    CAB: "from-blue-600 to-indigo-600",
   }
+  
+  const companyGradient = companyColors[user.company] || "from-blue-600 to-indigo-600"
 
   const menuItems = [
     {
@@ -45,7 +47,7 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
       {/* Overlay para móvil */}
       {!collapsed && (
         <div 
-          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity duration-300"
           onClick={onToggle}
         />
       )}
@@ -53,48 +55,68 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
       <aside
         className={cn(
           "fixed left-0 top-0 h-screen transition-all duration-300 z-50",
-          "bg-[#0D94B1] border-r border-[#0B7A96]",
+          "bg-[#0D94B1] shadow-2xl",
+          "border-r border-[#0B7A96]",
           // En móvil: oculto por defecto, se muestra como overlay
           "md:block",
-          collapsed ? "w-16" : "w-64 md:w-52 lg:w-64",
+          collapsed ? "w-20" : "w-64 md:w-56 lg:w-64",
           // En móvil: transform para ocultar/mostrar
           "md:translate-x-0",
           collapsed ? "-translate-x-full md:translate-x-0" : "translate-x-0"
         )}
       >
-      <div className="h-16 border-b border-[#0B7A96] flex items-center px-3 gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          onClick={onToggle}
-          className="text-white/80 hover:text-white hover:bg-white/10 flex-shrink-0 transition-all duration-300 hover:scale-110 active:scale-95 hover:rotate-3 active:rotate-0"
-          title={collapsed ? "Expandir menú" : "Colapsar menú"}
-        >
-          {collapsed ? (
-            <Menu className="h-5 w-5 transition-transform duration-300 hover:rotate-90" />
-          ) : (
-            <ChevronLeft className="h-5 w-5 transition-transform duration-300 hover:translate-x-1" />
-          )}
-        </Button>
-
-        {!collapsed && (
-          <div className="flex items-center gap-3 overflow-hidden">
-            <div
-              className={`w-10 h-10 rounded-lg ${companyColors[user.company]} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}
+      {/* Header del Sidebar */}
+      <div className="h-20 border-b border-[#0B7A96] flex items-center pl-2 pr-4 gap-3 bg-[#0C85A0] relative">
+        {/* Hamburguesa centrada cuando está colapsado */}
+        {collapsed && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onToggle}
+              className="text-white/90 hover:text-white hover:bg-white/10 flex-shrink-0 transition-all duration-300 hover:scale-110 active:scale-95 rounded-xl w-14 h-14"
+              title="Expandir menú"
             >
-              {user.company === "GMas" ? "GM" : "CAB"}
-            </div>
-            <div className="min-w-0">
-              <h1 className="text-white font-semibold text-sm truncate">SIGIA</h1>
-              <p className="text-white/70 text-xs truncate">
-                {user.company} - {user.gerencia}
-              </p>
-            </div>
+              <svg className="h-8 w-8 transition-transform duration-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round">
+                <line x1="4" y1="6" x2="20" y2="6" />
+                <line x1="4" y1="12" x2="20" y2="12" />
+                <line x1="4" y1="18" x2="20" y2="18" />
+              </svg>
+            </Button>
           </div>
         )}
+        
+        {/* Chevron a la izquierda cuando está expandido */}
+        {!collapsed && (
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggle}
+            className="text-white/90 hover:text-white hover:bg-white/10 flex-shrink-0 transition-all duration-300 hover:scale-110 active:scale-95 rounded-xl w-14 h-14"
+            title="Colapsar menú"
+          >
+            <ChevronLeft className="h-8 w-8 transition-transform duration-300 stroke-[3]" strokeWidth="3" />
+          </Button>
+        )}
+
+        <div className={cn(
+          "flex items-center gap-3 overflow-hidden flex-1 transition-opacity duration-300",
+          collapsed ? "opacity-0 pointer-events-none" : "opacity-100"
+        )}>
+          <div className="w-12 h-12 rounded-xl bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center flex-shrink-0 shadow-lg group">
+            <BarChart3 className="h-6 w-6 text-white transition-all duration-500 group-hover:scale-110 group-hover:rotate-12 animate-[pulse_4s_ease-in-out_infinite]" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <h1 className="text-white font-bold text-lg tracking-tight">SIGIA</h1>
+            <p className="text-white/80 text-[10px] font-medium leading-tight break-words">
+              Sistema de Gestión de Indicadores
+            </p>
+          </div>
+        </div>
       </div>
 
-      <nav className="p-2 space-y-1">
+      {/* Navegación */}
+      <nav className="p-3 space-y-1.5 mt-2">
         {menuItems.map((item) => {
           const isActive = item.exact ? pathname === item.href : pathname.startsWith(item.href)
           const Icon = item.icon
@@ -104,46 +126,73 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 px-3 py-2 rounded-lg transition-colors",
-                isActive ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10 hover:text-white",
+                "group flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
+                "relative overflow-hidden",
+                isActive 
+                  ? "bg-white/20 text-white shadow-lg border border-white/30" 
+                  : "text-white/70 hover:bg-white/10 hover:text-white border border-transparent",
               )}
             >
-              <Icon className="h-5 w-5 flex-shrink-0" />
-              {!collapsed && <span className="text-sm font-medium">{item.label}</span>}
+              {isActive && (
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full" />
+              )}
+              <Icon className={cn(
+                "h-5 w-5 flex-shrink-0 transition-transform duration-200",
+                isActive ? "text-white" : "text-white/70 group-hover:text-white",
+                "group-hover:scale-110"
+              )} />
+              {!collapsed && (
+                <span className={cn(
+                  "text-sm font-semibold tracking-wide",
+                  isActive ? "text-white" : "text-white/70 group-hover:text-white"
+                )}>
+                  {item.label}
+                </span>
+              )}
             </Link>
           )
         })}
       </nav>
 
-      {!collapsed && (
-        <div className="absolute bottom-4 left-0 right-0 px-4 space-y-3">
-          <div className="bg-white/10 rounded-lg p-4 space-y-3">
-            <div className="space-y-2 text-center">
-              <div>
-                <p className="text-xs text-white/60 uppercase tracking-wide">Empresa</p>
-                <p className="text-sm font-semibold text-white">{user.companyFull || user.company}</p>
+      <div className={cn(
+        "absolute bottom-4 left-0 right-0 px-4 space-y-3 transition-opacity duration-300",
+        collapsed ? "opacity-0 pointer-events-none" : "opacity-100"
+      )}>
+        {/* Info de Usuario */}
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg">
+            <div className="space-y-3">
+              <div className="text-center">
+                <div className="flex items-center justify-center gap-2 mb-2">
+                  <div className="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center shadow-md">
+                    <Building2 className="h-4 w-4 text-white" />
+                  </div>
+                  <p className="text-xs text-white/60 font-medium uppercase tracking-wider">Empresa</p>
+                </div>
+                <p className="text-xs font-bold text-white leading-relaxed whitespace-pre-wrap">{user.companyFull || user.company}</p>
               </div>
-              <div>
-                <p className="text-xs text-white/60 uppercase tracking-wide">Gerencia</p>
-                <p className="text-sm text-white/80">{user.gerencia}</p>
+              <div className="pt-2 border-t border-white/20 text-center">
+                <p className="text-xs text-white/60 font-medium uppercase tracking-wider mb-2">Gerencia</p>
+                <p className="text-xs text-white/90 font-semibold leading-relaxed whitespace-pre-wrap">{user.gerencia}</p>
               </div>
-            </div>
-            <div className="pt-2 border-t border-white/20">
-              <p className="text-xs text-white/60 text-center">Versión 1.0.0</p>
             </div>
           </div>
 
-          <div className="flex justify-center bg-white/20 rounded-lg p-3">
+          {/* Logo */}
+          <div className="flex justify-center bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
             <Image
               src={user.company === "GMas" ? "/logos/gmas-logo.png" : "/logos/cab-logo.png"}
               alt={`${user.company} Logo`}
               width={user.company === "GMas" ? 140 : 140}
               height={user.company === "GMas" ? 80 : 75}
-              className="object-contain"
+              className="object-contain opacity-90"
             />
           </div>
+          
+        {/* Versión */}
+        <div className="text-center">
+          <p className="text-xs text-white/50 font-medium">v1.0.0</p>
         </div>
-      )}
+      </div>
       </aside>
     </>
   )
