@@ -63,12 +63,14 @@ export default function VariablesPage() {
   const [addNextMonthDialogOpen, setAddNextMonthDialogOpen] = useState(false)
   const [variableToAdd, setVariableToAdd] = useState<{id: number, name: string} | null>(null)
   const [newMonthValue, setNewMonthValue] = useState("")
+  const [newMonthObservations, setNewMonthObservations] = useState("")
   const [isAdding, setIsAdding] = useState(false)
   
   // Estado para modal de edición
   const [editDialogOpen, setEditDialogOpen] = useState(false)
   const [itemToEdit, setItemToEdit] = useState<VariableRow | null>(null)
   const [newValue, setNewValue] = useState("")
+  const [newObservations, setNewObservations] = useState("")
   const [isSaving, setIsSaving] = useState(false)
   
   // Estado para modal de histórico
@@ -157,6 +159,7 @@ export default function VariablesPage() {
     setVariableToAdd({ id: idVariableEmpresaGerencia, name: nombreVariable })
     setAddNextMonthDialogOpen(true)
     setNewMonthValue("")
+    setNewMonthObservations("")
   }
 
   const handleConfirmAddNextMonth = async () => {
@@ -184,7 +187,7 @@ export default function VariablesPage() {
           periodo: nextMonthString,
           valor: valorNumerico,
           creado_Por: 'Usuario',
-          observaciones_Periodo: `Variable agregada para el próximo mes: ${getMonthName(nextMonth)} ${nextMonth.getFullYear()}`
+          observaciones_Periodo: newMonthObservations || `Variable agregada para el próximo mes: ${getMonthName(nextMonth)} ${nextMonth.getFullYear()}`
         })
       })
       const json = await res.json()
@@ -204,6 +207,7 @@ export default function VariablesPage() {
       setAddNextMonthDialogOpen(false)
       setVariableToAdd(null)
       setNewMonthValue("")
+      setNewMonthObservations("")
     }
   }
 
@@ -211,6 +215,7 @@ export default function VariablesPage() {
   const handleEdit = (row: VariableRow) => {
     setItemToEdit(row)
     setNewValue(row.valor.toString())
+    setNewObservations("") // Inicializar observaciones vacías
     setEditDialogOpen(true)
   }
 
@@ -228,7 +233,10 @@ export default function VariablesPage() {
       const res = await fetch(`/api/variables/${itemToEdit.id_Variable_EmpresaGerencia_Hechos}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ valor: valorNumerico }),
+        body: JSON.stringify({ 
+          valor: valorNumerico,
+          observaciones_Periodo: newObservations || null
+        }),
       })
       const json = await res.json()
 
@@ -248,6 +256,7 @@ export default function VariablesPage() {
       setEditDialogOpen(false)
       setItemToEdit(null)
       setNewValue("")
+      setNewObservations("")
     } catch (e: any) {
       toast.error(e.message || 'Error al actualizar el indicador')
     } finally {
@@ -537,6 +546,17 @@ export default function VariablesPage() {
                 className="w-full"
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="nextMonthObservations">Observaciones (Opcional)</Label>
+              <textarea
+                id="nextMonthObservations"
+                value={newMonthObservations}
+                onChange={(e) => setNewMonthObservations(e.target.value)}
+                placeholder="Agregar observaciones sobre este valor..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                rows={3}
+              />
+            </div>
           </div>
           
           <DialogFooter className="gap-2">
@@ -588,6 +608,17 @@ export default function VariablesPage() {
                 onChange={(e) => setNewValue(e.target.value)}
                 placeholder="Ingrese el nuevo valor"
                 autoFocus
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="observaciones">Observaciones (Opcional)</Label>
+              <textarea
+                id="observaciones"
+                value={newObservations}
+                onChange={(e) => setNewObservations(e.target.value)}
+                placeholder="Agregar observaciones sobre este valor..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                rows={3}
               />
             </div>
             <div className="text-sm text-gray-500">

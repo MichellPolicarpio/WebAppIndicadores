@@ -54,7 +54,7 @@ export async function PUT(
     const user = JSON.parse(userCookie.value)
     const id = parseInt(params.id)
     const body = await req.json()
-    const { valor } = body
+    const { valor, observaciones_Periodo } = body
 
     if (valor === undefined || valor === null) {
       return NextResponse.json({ 
@@ -66,6 +66,7 @@ export async function PUT(
     const query = `
       UPDATE INDICADORES.VARIABLES_EMPRESA_GERENCIA_HECHOS
       SET valor = @valor,
+          observaciones_Periodo = @observaciones_Periodo,
           fecha_Modificacion = GETDATE(),
           modificado_Por = @modificadoPor
       WHERE id_Variable_EmpresaGerencia_Hechos = @id
@@ -74,6 +75,7 @@ export async function PUT(
     await executeQuery(query, { 
       id, 
       valor, 
+      observaciones_Periodo: observaciones_Periodo || null,
       modificadoPor: user.usuario || user.email 
     })
 
