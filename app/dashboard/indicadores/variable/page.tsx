@@ -486,7 +486,8 @@ export default function VariablesPage() {
                           <Button
                             size="sm"
                             onClick={() => handleEdit(row)}
-                            className="bg-blue-500 hover:bg-blue-600 text-white h-9 w-9 p-0 rounded-lg shadow-sm hover:shadow-md transition-all"
+                            variant="outline"
+                            className="h-10 w-10 p-0 rounded-xl border-2 border-orange-500 text-orange-500 hover:bg-orange-50 hover:border-orange-600 hover:text-orange-600 transition-all duration-200"
                             title="Editar"
                           >
                             <Pencil className="h-4 w-4" />
@@ -494,7 +495,8 @@ export default function VariablesPage() {
                           <Button
                             size="sm"
                             onClick={() => handleViewHistory(row.id_Variable_Empresa_Gerencia, row.nombreVariable)}
-                            className="bg-gray-500 hover:bg-gray-600 text-white h-9 w-9 p-0 rounded-lg shadow-sm hover:shadow-md transition-all"
+                            variant="outline"
+                            className="h-10 w-10 p-0 rounded-xl border-2 border-blue-500 text-blue-500 hover:bg-blue-50 hover:border-blue-600 hover:text-blue-600 transition-all duration-200"
                             title="Ver Histórico"
                           >
                             <History className="h-4 w-4" />
@@ -502,7 +504,8 @@ export default function VariablesPage() {
                           <Button
                             size="sm"
                             onClick={() => handleAddNextMonth(row.id_Variable_Empresa_Gerencia, row.nombreVariable)}
-                            className="bg-green-500 hover:bg-green-600 text-white h-9 w-9 p-0 rounded-lg shadow-sm hover:shadow-md transition-all"
+                            variant="outline"
+                            className="h-10 w-10 p-0 rounded-xl border-2 border-green-500 text-green-500 hover:bg-green-50 hover:border-green-600 hover:text-green-600 transition-all duration-200"
                             title="Agregar variable del próximo mes"
                           >
                             <Plus className="h-4 w-4" />
