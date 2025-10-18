@@ -178,13 +178,15 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
           </div>
 
           {/* Logo */}
-          <div className="flex justify-center bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/10">
+          <div className="relative flex justify-center bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg overflow-hidden group hover:bg-white/15 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
+            {/* Brillo sutil animado en hover */}
+            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000"></div>
             <Image
               src={user.company === "GMas" ? "/logos/gmas-logo.png" : "/logos/cab-logo.png"}
               alt={`${user.company} Logo`}
               width={user.company === "GMas" ? 140 : 140}
               height={user.company === "GMas" ? 80 : 75}
-              className="object-contain opacity-90"
+              className="object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300 relative z-10"
             />
           </div>
           

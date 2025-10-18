@@ -19,7 +19,7 @@ export default function DashboardLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(true) // Iniciar colapsado para móvil
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false) // Iniciar expandido
 
   const getPageTitle = () => {
     if (pathname === "/dashboard") return "Dashboard"
@@ -38,6 +38,23 @@ export default function DashboardLayout({
       setUser(currentUser)
     }
   }, [router])
+
+  // Ajustar sidebar según tamaño de pantalla al cargar
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        // En móvil, colapsar automáticamente
+        setSidebarCollapsed(true)
+      }
+    }
+    
+    // Ejecutar al cargar
+    handleResize()
+    
+    // Escuchar cambios de tamaño
+    window.addEventListener('resize', handleResize)
+    return () => window.removeEventListener('resize', handleResize)
+  }, [])
 
   // Forzar scroll al tope al entrar a /dashboard para evitar saltos (siempre declarado)
   useEffect(() => {
