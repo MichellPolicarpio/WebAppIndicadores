@@ -1,6 +1,6 @@
 "use client"
 
-import { HelpCircle, User, LogOut, Settings, BarChart3, Target, FileText, Info } from "lucide-react"
+import { HelpCircle, User, LogOut, Settings, BarChart3, Target, FileText, Info, Menu } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -17,6 +17,7 @@ interface DashboardHeaderProps {
   user: UserType
   sidebarCollapsed: boolean
   pageTitle?: string
+  onToggleSidebar?: () => void
 }
 
 // Función para obtener contenido de ayuda personalizado por sección
@@ -124,17 +125,30 @@ function getHelpContent(pageTitle?: string) {
   }
 }
 
-export function DashboardHeader({ user, sidebarCollapsed, pageTitle }: DashboardHeaderProps) {
+export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSidebar }: DashboardHeaderProps) {
   return (
     <header
-      className={`fixed top-0 right-0 h-16 bg-[#0D94B1] border-b border-[#0B7A96] z-40 transition-all duration-300 ${sidebarCollapsed ? "left-16" : "left-64 md:left-52 lg:left-64"}`}
+      className={`fixed top-0 right-0 h-16 bg-[#0D94B1] border-b border-[#0B7A96] z-40 transition-all duration-300 left-0 ${sidebarCollapsed ? "md:left-16" : "md:left-64 md:md:left-52 md:lg:left-64"}`}
     >
       <div className="h-full flex items-center justify-between px-6">
-        {pageTitle && (
-          <div>
-            <h2 className="text-xl font-bold text-white uppercase tracking-wide">{pageTitle}</h2>
-          </div>
-        )}
+        <div className="flex items-center gap-3">
+          {/* Botón de hamburguesa para móvil */}
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onToggleSidebar}
+            className="text-white/80 hover:text-white hover:bg-white/10 md:hidden"
+            title="Abrir menú"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+          
+          {pageTitle && (
+            <div>
+              <h2 className="text-xl font-bold text-white uppercase tracking-wide">{pageTitle}</h2>
+            </div>
+          )}
+        </div>
 
         <div className="flex items-center gap-2 ml-auto">
           {/* Botón de Ayuda personalizado por sección */}

@@ -18,7 +18,7 @@ export default function DashboardLayout({
   const router = useRouter()
   const pathname = usePathname()
   const [user, setUser] = useState<User | null>(null)
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(true) // Iniciar colapsado para móvil
 
   const getPageTitle = () => {
     if (pathname === "/dashboard") return "Dashboard"
@@ -60,9 +60,14 @@ export default function DashboardLayout({
         collapsed={sidebarCollapsed}
         onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      <DashboardHeader user={user} sidebarCollapsed={sidebarCollapsed} pageTitle={getPageTitle()} />
+      <DashboardHeader 
+        user={user} 
+        sidebarCollapsed={sidebarCollapsed} 
+        pageTitle={getPageTitle()} 
+        onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
+      />
       <div className="pt-16">
-        <main className={`transition-all duration-300 ${sidebarCollapsed ? "ml-16" : "ml-64 md:ml-52 lg:ml-64"}`}>
+        <main className={`transition-all duration-300 ml-0 ${sidebarCollapsed ? "md:ml-16" : "md:ml-64 md:md:ml-52 md:lg:ml-64"}`}>
           {/* Widget persistente: se mantiene montado para evitar recargas al volver al dashboard */}
           <div className="p-6 bg-[#F6FAFB]">
             <div className={pathname === "/dashboard" ? "block" : "hidden"} style={{ overflowAnchor: "none" }}>

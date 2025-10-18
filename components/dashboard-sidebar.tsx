@@ -41,13 +41,27 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
   ]
 
   return (
-    <aside
-      className={cn(
-        "fixed left-0 top-0 h-screen transition-all duration-300 z-50",
-        "bg-[#0D94B1] border-r border-[#0B7A96]",
-        collapsed ? "w-16" : "w-64 md:w-52 lg:w-64",
+    <>
+      {/* Overlay para móvil */}
+      {!collapsed && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-40 md:hidden"
+          onClick={onToggle}
+        />
       )}
-    >
+      
+      <aside
+        className={cn(
+          "fixed left-0 top-0 h-screen transition-all duration-300 z-50",
+          "bg-[#0D94B1] border-r border-[#0B7A96]",
+          // En móvil: oculto por defecto, se muestra como overlay
+          "md:block",
+          collapsed ? "w-16" : "w-64 md:w-52 lg:w-64",
+          // En móvil: transform para ocultar/mostrar
+          "md:translate-x-0",
+          collapsed ? "-translate-x-full md:translate-x-0" : "translate-x-0"
+        )}
+      >
       <div className="h-16 border-b border-[#0B7A96] flex items-center px-3 gap-3">
         <Button
           variant="ghost"
@@ -130,6 +144,7 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
           </div>
         </div>
       )}
-    </aside>
+      </aside>
+    </>
   )
 }
