@@ -450,7 +450,7 @@ export default function VariablesPage() {
                     <th className="text-left px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
                       Valor
                     </th>
-                    <th className="text-left px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="text-center px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
                       Período
                     </th>
                     <th className="text-center px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
@@ -476,11 +476,9 @@ export default function VariablesPage() {
                           {row.valor.toLocaleString()}
                         </div>
                       </td>
-                      <td className="px-4 sm:px-6 py-4">
-                        <div className="flex justify-center">
-                          <div className="inline-flex items-center justify-center px-3 py-1 rounded-full text-xs sm:text-sm font-medium bg-gray-200 text-gray-700 text-center">
-                            {formatPeriodo(row.periodo)}
-                          </div>
+                      <td className="px-4 sm:px-6 py-4 text-center">
+                        <div className="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-gray-200 text-gray-700 min-w-[80px]">
+                          {formatPeriodo(row.periodo)}
                         </div>
                       </td>
                       <td className="px-4 sm:px-6 py-4">
