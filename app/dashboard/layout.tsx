@@ -9,6 +9,7 @@ import { PowerBIAuthWidget } from "@/components/power-bi-auth-widget"
 import { getUser, type User } from "@/lib/auth"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { DashboardSidebar } from "@/components/dashboard-sidebar"
+import { DashboardFooter } from "@/components/dashboard-footer"
 
 export default function DashboardLayout({
   children,
@@ -54,7 +55,7 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="min-h-screen bg-[#F6FAFB]">
+    <div className="min-h-screen bg-[#F6FAFB] flex flex-col">
       <DashboardSidebar
         user={user}
         collapsed={sidebarCollapsed}
@@ -66,10 +67,10 @@ export default function DashboardLayout({
         pageTitle={getPageTitle()} 
         onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
-      <div className="pt-20">
-        <main className={`transition-all duration-300 ml-0 ${sidebarCollapsed ? "md:ml-20" : "md:ml-64 md:md:ml-56 md:lg:ml-64"}`}>
+      <div className="pt-20 flex-1 flex flex-col">
+        <main className={`transition-all duration-300 ml-0 ${sidebarCollapsed ? "md:ml-20" : "md:ml-64 md:md:ml-56 md:lg:ml-64"} flex-1 flex flex-col`}>
           {/* Widget persistente: se mantiene montado para evitar recargas al volver al dashboard */}
-          <div className="p-6 bg-[#F6FAFB]">
+          <div className="p-6 bg-[#F6FAFB] flex-1 flex flex-col">
             <div className={pathname === "/dashboard" ? "block" : "hidden"} style={{ overflowAnchor: "none" }}>
               <div className="bg-white rounded-lg border border-gray-200 shadow-sm overflow-hidden mb-6">
                 <div className="border-b border-gray-200 p-4">
@@ -85,8 +86,11 @@ export default function DashboardLayout({
               </div>
             </div>
             {/* Contenido de la página */}
-            <div className="bg-[#F6FAFB] min-h-screen">{children}</div>
+            <div className="bg-[#F6FAFB] flex-1">{children}</div>
           </div>
+          
+          {/* Footer */}
+          <DashboardFooter />
         </main>
       </div>
     </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { HelpCircle, User, LogOut, Settings, BarChart3, Target, FileText, Info, Menu, Bell, Search } from "lucide-react"
+import { HelpCircle, User, LogOut, Settings, BarChart3, Target, FileText, Info, Menu, Bell, Search, Database, LineChart } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -230,13 +230,13 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSid
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                       <div className="w-6 h-6 flex items-center justify-center bg-red-100 rounded">
-                        <span className="text-xs font-bold text-red-600">SQL</span>
+                        <Database className="w-4 h-4 text-red-600" />
                       </div>
                       <span className="text-sm text-gray-700">SQL Server</span>
                     </div>
                     <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
                       <div className="w-6 h-6 flex items-center justify-center bg-yellow-100 rounded">
-                        <span className="text-xs font-bold text-yellow-600">BI</span>
+                        <LineChart className="w-4 h-4 text-yellow-600" />
                       </div>
                       <span className="text-sm text-gray-700">Power BI</span>
                     </div>
