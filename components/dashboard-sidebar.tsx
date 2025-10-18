@@ -108,7 +108,7 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
           </div>
           <div className="min-w-0 flex-1">
             <h1 className="text-white font-bold text-lg tracking-tight">SIGIA</h1>
-            <p className="text-white/80 text-[10px] font-medium leading-tight break-words">
+            <p className="text-white/80 text-[10px] font-medium leading-tight whitespace-pre-wrap">
               Sistema de Gestión de Indicadores
             </p>
           </div>

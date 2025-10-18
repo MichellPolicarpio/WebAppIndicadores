@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { logout, type User as UserType } from "@/lib/auth"
+import { useRouter } from "next/navigation"
 
 interface DashboardHeaderProps {
   user: UserType
@@ -126,6 +127,8 @@ function getHelpContent(pageTitle?: string) {
 }
 
 export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSidebar }: DashboardHeaderProps) {
+  const router = useRouter()
+  
   return (
     <header
       className={`fixed top-0 right-0 h-20 bg-[#0D94B1] border-b border-[#0B7A96] z-40 transition-all duration-300 left-0 ${sidebarCollapsed ? "md:left-20" : "md:left-64 md:md:left-56 md:lg:left-64"} shadow-md`}
@@ -150,16 +153,17 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSid
           )}
         </div>
 
-        <div className="flex items-center gap-2 ml-auto">
+        <div className="flex items-center gap-1 ml-4">
           {/* Botón de Ayuda personalizado por sección */}
           <Dialog>
             <DialogTrigger asChild>
               <Button 
                 variant="ghost" 
-                size="icon" 
-                className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-0 h-auto transition-all duration-200"
               >
-                <HelpCircle className="h-5 w-5" />
+                <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <HelpCircle className="h-4 w-4 text-white" />
+                </div>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
@@ -180,10 +184,11 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSid
             <DialogTrigger asChild>
               <Button 
                 variant="ghost" 
-                size="icon" 
-                className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200"
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-0 h-auto transition-all duration-200"
               >
-                <Info className="h-5 w-5" />
+                <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <Info className="h-4 w-4 text-white" />
+                </div>
               </Button>
             </DialogTrigger>
             <DialogContent className="max-w-2xl">
@@ -256,11 +261,14 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSid
             </DialogContent>
           </Dialog>
 
+          {/* Separador - oculto en móvil */}
+          <div className="hidden md:block h-6 w-px bg-white/20 ml-3 mr-0"></div>
+
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
-                className="flex items-center gap-3 text-white/80 hover:text-white hover:bg-white/10 rounded-xl px-3 transition-all duration-200"
+                className="flex items-center gap-3 text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-0 md:px-3 h-auto transition-all duration-200"
               >
                 <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                   <User className="h-4 w-4 text-white" />
@@ -276,11 +284,11 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSid
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-gray-200" />
-              <DropdownMenuItem className="text-gray-700 focus:bg-gray-100 focus:text-gray-900">
+              <DropdownMenuItem onClick={() => router.push("/dashboard/configuracion")} className="text-gray-700 focus:bg-gray-100 focus:text-gray-900 cursor-pointer">
                 <Settings className="mr-2 h-4 w-4" />
                 <span>Configuración</span>
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={logout} className="text-red-600 focus:bg-red-50 focus:text-red-700">
+              <DropdownMenuItem onClick={logout} className="text-red-600 focus:bg-red-50 focus:text-red-700 cursor-pointer">
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Cerrar Sesión</span>
               </DropdownMenuItem>
