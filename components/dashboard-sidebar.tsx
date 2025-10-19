@@ -186,7 +186,7 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
               alt={`${user.company} Logo`}
               width={user.company === "GMas" ? 140 : 140}
               height={user.company === "GMas" ? 80 : 75}
-              className="object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300 relative z-10 brightness-0 invert"
+              className={`object-contain opacity-90 group-hover:opacity-100 transition-opacity duration-300 relative z-10 brightness-0 invert ${user.company !== "GMas" ? "py-4" : ""}`}
             />
           </div>
           
