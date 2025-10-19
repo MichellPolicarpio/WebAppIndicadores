@@ -164,7 +164,7 @@ export function DashboardHeader({ user, sidebarCollapsed, pageInfo, onToggleSide
             <DialogTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-0 h-auto transition-all duration-200"
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-0 h-auto transition-all duration-200 mr-2"
               >
                 <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                   <HelpCircle className="h-4 w-4 text-white" />
