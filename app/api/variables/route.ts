@@ -47,6 +47,7 @@ export async function GET(req: NextRequest) {
             v.nombreVariable,
             vegh.periodo,
             vegh.valor,
+            vegh.observaciones_Periodo,
             eo.nombreEmpresaOperadora
         FROM INDICADORES.VARIABLES_EMPRESA_GERENCIA_HECHOS AS vegh
         INNER JOIN INDICADORES.VARIABLE_EMPRESA_GERENCIA AS veg
@@ -93,6 +94,7 @@ export async function GET(req: NextRequest) {
             v.nombreVariable,
             vegh.periodo,
             vegh.valor,
+            vegh.observaciones_Periodo,
             eo.nombreEmpresaOperadora
         FROM INDICADORES.VARIABLES_EMPRESA_GERENCIA_HECHOS AS vegh
         INNER JOIN INDICADORES.VARIABLE_EMPRESA_GERENCIA AS veg

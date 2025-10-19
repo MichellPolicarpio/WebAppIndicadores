@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar } from "lucide-react"
+import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar, Eye } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +26,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 
 interface VariableRow {
   id_Variable_EmpresaGerencia_Hechos: number
@@ -215,7 +216,7 @@ export default function VariablesPage() {
   const handleEdit = (row: VariableRow) => {
     setItemToEdit(row)
     setNewValue(row.valor.toString())
-    setNewObservations("") // Inicializar observaciones vacías
+    setNewObservations(row.observaciones_Periodo || "") // Cargar observaciones existentes
     setEditDialogOpen(true)
   }
 
@@ -249,7 +250,7 @@ export default function VariablesPage() {
       // Actualizar la tabla local
       setVariables(variables.map(v => 
         v.id_Variable_EmpresaGerencia_Hechos === itemToEdit.id_Variable_EmpresaGerencia_Hechos
-          ? { ...v, valor: valorNumerico }
+          ? { ...v, valor: valorNumerico, observaciones_Periodo: newObservations || null }
           : v
       ))
 
@@ -441,24 +442,27 @@ export default function VariablesPage() {
           </CardHeader>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200">
+              <table className="w-full border-collapse border border-gray-300">
+                <thead className="bg-gradient-to-r from-gray-50 to-gray-100">
                   <tr>
-                    <th className="text-left px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="text-left px-3 py-3 text-xs font-bold text-gray-700 uppercase tracking-wider border border-gray-300">
                       Variable
                     </th>
-                    <th className="text-left px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="text-center px-3 py-3 text-xs font-bold text-gray-700 uppercase tracking-wider border border-gray-300">
                       Valor
                     </th>
-                    <th className="text-center px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="text-center px-3 py-3 text-xs font-bold text-gray-700 uppercase tracking-wider border border-gray-300">
                       Período
                     </th>
-                    <th className="text-center px-4 sm:px-6 py-4 text-xs sm:text-sm font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="text-center px-3 py-3 text-xs font-bold text-gray-700 uppercase tracking-wider border border-gray-300">
+                      Observaciones
+                    </th>
+                    <th className="text-center px-3 py-3 text-xs font-bold text-gray-700 uppercase tracking-wider border border-gray-300">
                       Acciones
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody>
                   {variables.map((row, index) => (
                     <tr 
                       key={row.id_Variable_EmpresaGerencia_Hechos} 
@@ -466,22 +470,48 @@ export default function VariablesPage() {
                         index % 2 === 0 ? 'bg-white' : 'bg-gray-50'
                       }`}
                     >
-                      <td className="px-4 sm:px-6 py-4">
-                        <div className="text-sm sm:text-base font-medium text-gray-900">
+                      <td className="px-3 py-3 text-left border border-gray-300">
+                        <div className="text-xs text-gray-900">
                           {row.nombreVariable}
                         </div>
                       </td>
-                      <td className="px-4 sm:px-6 py-4">
-                        <div className="text-sm sm:text-base font-bold text-blue-600">
+                      <td className="px-3 py-3 text-center border border-gray-300">
+                        <div className="text-xs text-blue-600">
                           {row.valor.toLocaleString()}
                         </div>
                       </td>
-                      <td className="px-4 sm:px-6 py-4 text-center">
-                        <div className="inline-flex items-center justify-center px-3 py-1.5 rounded-full text-xs sm:text-sm font-medium bg-gray-200 text-gray-700 min-w-[80px]">
+                      <td className="px-3 py-3 text-center border border-gray-300">
+                        <div className="text-xs text-gray-700">
                           {formatPeriodo(row.periodo)}
                         </div>
                       </td>
-                      <td className="px-4 sm:px-6 py-4">
+                      <td className="px-3 py-3 text-center border border-gray-300">
+                        {row.observaciones_Periodo && row.observaciones_Periodo.length > 30 ? (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <button className="text-xs text-gray-600 hover:text-blue-600 flex items-center justify-center gap-1 mx-auto transition-colors">
+                                <span className="max-w-[150px] truncate">
+                                  {row.observaciones_Periodo.substring(0, 30)}...
+                                </span>
+                                <Eye className="h-3 w-3 flex-shrink-0" />
+                              </button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-80 max-w-sm">
+                              <div className="space-y-2">
+                                <h4 className="font-semibold text-sm text-gray-900">Observaciones</h4>
+                                <p className="text-xs text-gray-600 leading-relaxed whitespace-pre-wrap">
+                                  {row.observaciones_Periodo}
+                                </p>
+                              </div>
+                            </PopoverContent>
+                          </Popover>
+                        ) : (
+                          <div className="text-xs text-gray-600">
+                            {row.observaciones_Periodo || '-'}
+                          </div>
+                        )}
+                      </td>
+                      <td className="px-3 py-3 text-center border border-gray-300">
                         <div className="flex items-center justify-center gap-2">
                           <Button
                             size="sm"

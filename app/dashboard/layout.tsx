@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { BarChart3 } from "lucide-react"
+import { BarChart3, Home, PlusCircle, Target, Settings, LayoutDashboard } from "lucide-react"
 import { PowerBIAuthWidget } from "@/components/power-bi-auth-widget"
 import { getUser, type User } from "@/lib/auth"
 import { DashboardHeader } from "@/components/dashboard-header"
@@ -21,13 +21,13 @@ export default function DashboardLayout({
   const [user, setUser] = useState<User | null>(null)
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false) // Iniciar expandido
 
-  const getPageTitle = () => {
-    if (pathname === "/dashboard") return "Dashboard"
-    if (pathname.startsWith("/dashboard/indicadores/variable")) return "Indicadores Mensuales"
-    if (pathname.startsWith("/dashboard/indicadores/objetivo")) return "Objetivos"
-    if (pathname.startsWith("/dashboard/indicadores")) return "Agregar Indicadores"
-    if (pathname.startsWith("/dashboard/configuracion")) return "Configuración"
-    return ""
+  const getPageInfo = () => {
+    if (pathname === "/dashboard") return { title: "Dashboard", icon: LayoutDashboard }
+    if (pathname.startsWith("/dashboard/indicadores/variable")) return { title: "Indicadores Mensuales", icon: BarChart3 }
+    if (pathname.startsWith("/dashboard/indicadores/objetivo")) return { title: "Objetivos", icon: Target }
+    if (pathname.startsWith("/dashboard/indicadores")) return { title: "Agregar Indicadores", icon: PlusCircle }
+    if (pathname.startsWith("/dashboard/configuracion")) return { title: "Configuración", icon: Settings }
+    return { title: "", icon: null }
   }
 
   useEffect(() => {
@@ -81,7 +81,7 @@ export default function DashboardLayout({
       <DashboardHeader 
         user={user} 
         sidebarCollapsed={sidebarCollapsed} 
-        pageTitle={getPageTitle()} 
+        pageInfo={getPageInfo()} 
         onToggleSidebar={() => setSidebarCollapsed(!sidebarCollapsed)}
       />
       <div className="pt-20 flex-1 flex flex-col">

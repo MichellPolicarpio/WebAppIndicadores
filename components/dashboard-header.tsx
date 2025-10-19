@@ -1,6 +1,6 @@
 "use client"
 
-import { HelpCircle, User, LogOut, Settings, BarChart3, Target, FileText, Info, Menu, Bell, Search, Database, LineChart } from "lucide-react"
+import { HelpCircle, User, LogOut, Settings, BarChart3, Target, FileText, Info, Menu, Bell, Search, Database, LineChart, Home, PlusCircle, LucideIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -17,7 +17,7 @@ import { useRouter } from "next/navigation"
 interface DashboardHeaderProps {
   user: UserType
   sidebarCollapsed: boolean
-  pageTitle?: string
+  pageInfo?: { title: string; icon: LucideIcon | null }
   onToggleSidebar?: () => void
 }
 
@@ -126,7 +126,7 @@ function getHelpContent(pageTitle?: string) {
   }
 }
 
-export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSidebar }: DashboardHeaderProps) {
+export function DashboardHeader({ user, sidebarCollapsed, pageInfo, onToggleSidebar }: DashboardHeaderProps) {
   const router = useRouter()
   
   return (
@@ -146,9 +146,14 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSid
             <Menu className="h-5 w-5" />
           </Button>
           
-          {pageTitle && (
-            <div>
-              <h2 className="text-2xl font-bold text-white tracking-tight">{pageTitle}</h2>
+          {pageInfo?.title && (
+            <div className="flex items-center gap-3">
+              {pageInfo.icon && (
+                <div className="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg">
+                  <pageInfo.icon className="h-5 w-5 text-white" />
+                </div>
+              )}
+              <h2 className="text-2xl font-bold text-white tracking-tight">{pageInfo.title}</h2>
             </div>
           )}
         </div>
@@ -170,11 +175,11 @@ export function DashboardHeader({ user, sidebarCollapsed, pageTitle, onToggleSid
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2 text-xl">
                   <HelpCircle className="h-6 w-6 text-blue-500" />
-                  Ayuda - {pageTitle}
+                  Ayuda - {pageInfo?.title}
                 </DialogTitle>
               </DialogHeader>
               <div className="text-left space-y-4 pt-4">
-                {getHelpContent(pageTitle)}
+                {getHelpContent(pageInfo?.title)}
               </div>
             </DialogContent>
           </Dialog>
