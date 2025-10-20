@@ -4,9 +4,11 @@ import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Plus, Target, Pencil, Check, X, History, Trash2, AlertCircle } from "lucide-react"
+import { ArrowLeft, Plus, Target, Pencil, Check, X, History, Trash2, AlertCircle, Calendar, BarChart3 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,12 +19,20 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 interface Objetivo {
   id: string
   nombre: string
-  valorActual: string
   valorObjetivo: string
+  valoresMensuales: { [mes: string]: string }
   periodo: string
   progreso: number
 }
@@ -64,6 +74,10 @@ export default function AgregarObjetivoPage() {
     return [currentYear - 2, currentYear - 1, currentYear]
   }
 
+  const generateMonths = () => {
+    return ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"]
+  }
+
   const [currentDate] = useState(getCurrentDate())
   const [availableMonths] = useState(generateAvailableMonths())
   const [years] = useState(generateYears())
@@ -72,32 +86,84 @@ export default function AgregarObjetivoPage() {
     {
       id: "1",
       nombre: "Reducción de fugas",
-      valorActual: "15%",
       valorObjetivo: "10%",
+      valoresMensuales: {
+        "Ene": "15%",
+        "Feb": "14%",
+        "Mar": "13%",
+        "Abr": "12%",
+        "May": "11%",
+        "Jun": "10%",
+        "Jul": "9%",
+        "Ago": "8%",
+        "Set": "7%",
+        "Oct": "6%",
+        "Nov": "5%",
+        "Dic": "4%"
+      },
       periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
       progreso: 50,
     },
     {
       id: "2",
       nombre: "Satisfacción del cliente",
-      valorActual: "85%",
       valorObjetivo: "95%",
+      valoresMensuales: {
+        "Ene": "85%",
+        "Feb": "87%",
+        "Mar": "89%",
+        "Abr": "91%",
+        "May": "93%",
+        "Jun": "95%",
+        "Jul": "96%",
+        "Ago": "97%",
+        "Set": "98%",
+        "Oct": "99%",
+        "Nov": "100%",
+        "Dic": "100%"
+      },
       periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
       progreso: 75,
     },
     {
       id: "3",
       nombre: "Cobertura de servicio",
-      valorActual: "92%",
       valorObjetivo: "98%",
+      valoresMensuales: {
+        "Ene": "92%",
+        "Feb": "93%",
+        "Mar": "94%",
+        "Abr": "95%",
+        "May": "96%",
+        "Jun": "97%",
+        "Jul": "98%",
+        "Ago": "98%",
+        "Set": "99%",
+        "Oct": "99%",
+        "Nov": "100%",
+        "Dic": "100%"
+      },
       periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
       progreso: 67,
     },
     {
       id: "4",
       nombre: "Eficiencia operativa",
-      valorActual: "78%",
       valorObjetivo: "90%",
+      valoresMensuales: {
+        "Ene": "78%",
+        "Feb": "80%",
+        "Mar": "82%",
+        "Abr": "84%",
+        "May": "86%",
+        "Jun": "88%",
+        "Jul": "90%",
+        "Ago": "91%",
+        "Set": "92%",
+        "Oct": "93%",
+        "Nov": "94%",
+        "Dic": "95%"
+      },
       periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
       progreso: 60,
     },
@@ -105,20 +171,57 @@ export default function AgregarObjetivoPage() {
 
   const [selectedMonth, setSelectedMonth] = useState(getMonthName(currentDate.month))
   const [selectedYear, setSelectedYear] = useState(currentDate.year.toString())
+  const [viewType, setViewType] = useState<"mensual" | "anual">("mensual")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValues, setEditValues] = useState({ actual: "", objetivo: "" })
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<string | null>(null)
   const [validationError, setValidationError] = useState<string>("")
+  
+  // Estado para modal de agregar variable
+  const [addVariableDialogOpen, setAddVariableDialogOpen] = useState(false)
+  const [newVariableName, setNewVariableName] = useState("")
+  const [newVariableValues, setNewVariableValues] = useState<{[mes: string]: {valor: string, observaciones: string}}>({})
+  const [isAddingVariable, setIsAddingVariable] = useState(false)
+  
+  // Estado para edición híbrida
+  const [editingVariable, setEditingVariable] = useState<Objetivo | null>(null)
+  const [editVariableDialogOpen, setEditVariableDialogOpen] = useState(false)
+  const [editVariableValues, setEditVariableValues] = useState<{[mes: string]: {valor: string, observaciones: string}}>({})
+  const [isSavingEdit, setIsSavingEdit] = useState(false)
+  const [editingCell, setEditingCell] = useState<{variableId: string, mes: string, field: 'valor' | 'observaciones'} | null>(null)
+  const [inlineEditValue, setInlineEditValue] = useState("")
+
+  // Variables precargadas simuladas
+  const precargadasVariables = [
+    { nombre: "Cartera de clientes (mdp)", valor: "1,547.1", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Clientes domésticos", valor: "196,692", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Clientes no domésticos", valor: "15,020", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Cortes de servicio", valor: "2,868", mes: "May 2025", observaciones: "-" },
+    { nombre: "Facturación total con IVA (mdp)", valor: "114.4", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Facturación total sin IVA (mdp)", valor: "104.9", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Número de clientes", valor: "211,712", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Número de clientes con servicio medido", valor: "77,095", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Número de clientes con servicio suspendido", valor: "33,058", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Número de reclamaciones en curso", valor: "2", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Número de reclamaciones registradas", valor: "46", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Número de reclamaciones resueltas", valor: "44", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Plazo medio de resolución (dias naturales)", valor: "8", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Recargos totales (mdp)", valor: "19", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Recaudación (mdp)", valor: "76.26", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Recaudación por cortes de servicio ejecutado", valor: "11.94", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Recaudación propia (mdp)", valor: "76.26", mes: "May 2025", observaciones: "Carga masiva" },
+    { nombre: "Recibos (mdp)", valor: "8", mes: "May 2025", observaciones: "Carga masiva" }
+  ]
 
   const handleEdit = (objetivo: Objetivo) => {
     setEditingId(objetivo.id)
-    setEditValues({ actual: objetivo.valorActual, objetivo: objetivo.valorObjetivo })
+    setEditValues({ actual: "", objetivo: objetivo.valorObjetivo })
   }
 
   const handleSaveEdit = (id: string) => {
-    if (!editValues.actual.trim() || !editValues.objetivo.trim()) {
-      setValidationError("Los valores no pueden estar vacíos")
+    if (!editValues.objetivo.trim()) {
+      setValidationError("El valor objetivo no puede estar vacío")
       return
     }
 
@@ -127,7 +230,6 @@ export default function AgregarObjetivoPage() {
         o.id === id
           ? {
               ...o,
-              valorActual: editValues.actual,
               valorObjetivo: editValues.objetivo,
             }
           : o,
@@ -143,21 +245,6 @@ export default function AgregarObjetivoPage() {
     setValidationError("")
   }
 
-  const handleAddNew = () => {
-    const nextMonth = currentDate.month + 1
-    const nextYear = nextMonth > 11 ? currentDate.year + 1 : currentDate.year
-    const nextMonthName = getMonthName(nextMonth > 11 ? 0 : nextMonth)
-
-    const newObjetivo: Objetivo = {
-      id: Date.now().toString(),
-      nombre: "Nuevo objetivo",
-      valorActual: "0%",
-      valorObjetivo: "100%",
-      periodo: `${nextMonthName} ${nextYear}`,
-      progreso: 0,
-    }
-    setObjetivos([...objetivos, newObjetivo])
-  }
 
   const handleDeleteClick = (id: string) => {
     setItemToDelete(id)
@@ -176,6 +263,184 @@ export default function AgregarObjetivoPage() {
     console.log("Ver histórico de objetivo:", id)
   }
 
+  // ==================== AGREGAR VARIABLE ====================
+  const handleAddNew = () => {
+    setNewVariableName("")
+    setNewVariableValues({})
+    setAddVariableDialogOpen(true)
+  }
+
+  const handleSaveVariable = async () => {
+    if (!newVariableName.trim()) {
+      setValidationError("El nombre de la variable es requerido")
+      return
+    }
+
+    setIsAddingVariable(true)
+    try {
+      // Crear la nueva variable con valores mensuales
+      const newVariable: Objetivo = {
+        id: Date.now().toString(),
+        nombre: newVariableName,
+        valorObjetivo: "100%", // Valor objetivo por defecto
+        valoresMensuales: Object.keys(newVariableValues).reduce((acc, mes) => {
+          acc[mes] = newVariableValues[mes].valor || "-"
+          return acc
+        }, {} as {[mes: string]: string}),
+        periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
+        progreso: 0,
+      }
+
+      setObjetivos([...objetivos, newVariable])
+      setAddVariableDialogOpen(false)
+      setNewVariableName("")
+      setNewVariableValues({})
+      setValidationError("")
+    } catch (error) {
+      console.error("Error agregando variable:", error)
+    } finally {
+      setIsAddingVariable(false)
+    }
+  }
+
+  const handleCancelAddVariable = () => {
+    setAddVariableDialogOpen(false)
+    setNewVariableName("")
+    setNewVariableValues({})
+    setValidationError("")
+  }
+
+  const updateVariableValue = (mes: string, field: 'valor' | 'observaciones', value: string) => {
+    setNewVariableValues(prev => ({
+      ...prev,
+      [mes]: {
+        ...prev[mes],
+        [field]: value
+      }
+    }))
+  }
+
+  // Validar si todos los campos están llenos
+  const isFormValid = () => {
+    if (!newVariableName.trim()) return false
+    
+    const months = generateMonths()
+    return months.every(mes => {
+      const monthData = newVariableValues[mes]
+      return monthData && monthData.valor && monthData.valor.trim() !== ""
+    })
+  }
+
+  const selectPreloadedVariable = (variable: typeof precargadasVariables[0]) => {
+    setNewVariableName(variable.nombre)
+    // Precargar el valor en el mes correspondiente (May = índice 4)
+    const mesIndex = 4 // May
+    const mesName = generateMonths()[mesIndex]
+    setNewVariableValues({
+      [mesName]: {
+        valor: variable.valor,
+        observaciones: variable.observaciones
+      }
+    })
+  }
+
+  // ==================== EDICIÓN HÍBRIDA ====================
+  
+  // Edición inline - clic en celda
+  const startInlineEdit = (variableId: string, mes: string, field: 'valor' | 'observaciones', currentValue: string) => {
+    setEditingCell({ variableId, mes, field })
+    setInlineEditValue(currentValue)
+  }
+
+  // Guardar edición inline
+  const saveInlineEdit = () => {
+    if (!editingCell) return
+    
+    const { variableId, mes, field } = editingCell
+    setObjetivos(prev => prev.map(obj => 
+      obj.id === variableId 
+        ? {
+            ...obj,
+            valoresMensuales: {
+              ...obj.valoresMensuales,
+              [mes]: inlineEditValue
+            }
+          }
+        : obj
+    ))
+    
+    setEditingCell(null)
+    setInlineEditValue("")
+  }
+
+  // Cancelar edición inline
+  const cancelInlineEdit = () => {
+    setEditingCell(null)
+    setInlineEditValue("")
+  }
+
+  // Edición completa - modal
+  const startFullEdit = (objetivo: Objetivo) => {
+    setEditingVariable(objetivo)
+    setEditVariableValues(
+      Object.keys(objetivo.valoresMensuales).reduce((acc, mes) => {
+        const valor = objetivo.valoresMensuales[mes]
+        acc[mes] = {
+          valor: typeof valor === 'string' ? valor : (valor?.valor || ""),
+          observaciones: "" // Las observaciones no están en el modelo actual
+        }
+        return acc
+      }, {} as {[mes: string]: {valor: string, observaciones: string}})
+    )
+    setEditVariableDialogOpen(true)
+  }
+
+  // Guardar edición completa
+  const saveFullEdit = async () => {
+    if (!editingVariable) return
+    
+    setIsSavingEdit(true)
+    try {
+      setObjetivos(prev => prev.map(obj => 
+        obj.id === editingVariable.id 
+          ? {
+              ...obj,
+              valoresMensuales: Object.keys(editVariableValues).reduce((acc, mes) => {
+                acc[mes] = editVariableValues[mes].valor || "-"
+                return acc
+              }, {} as {[mes: string]: string})
+            }
+          : obj
+      ))
+      
+      setEditVariableDialogOpen(false)
+      setEditingVariable(null)
+      setEditVariableValues({})
+    } catch (error) {
+      console.error("Error guardando edición:", error)
+    } finally {
+      setIsSavingEdit(false)
+    }
+  }
+
+  // Cancelar edición completa
+  const cancelFullEdit = () => {
+    setEditVariableDialogOpen(false)
+    setEditingVariable(null)
+    setEditVariableValues({})
+  }
+
+  // Actualizar valor en edición completa
+  const updateEditVariableValue = (mes: string, field: 'valor' | 'observaciones', value: string) => {
+    setEditVariableValues(prev => ({
+      ...prev,
+      [mes]: {
+        ...prev[mes],
+        [field]: value
+      }
+    }))
+  }
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto px-4 sm:px-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -191,6 +456,22 @@ export default function AgregarObjetivoPage() {
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Objetivos guardados</h1>
           <p className="text-gray-600 mt-1 text-sm sm:text-base">Gestiona los objetivos y metas del sistema</p>
         </div>
+        
+        {/* Toggle de vista centrado */}
+        <div className="flex items-center justify-center w-full sm:w-auto mt-4 sm:mt-0">
+          <Tabs value={viewType} onValueChange={(value: "mensual" | "anual") => setViewType(value)} className="w-auto">
+            <TabsList className="bg-white border border-gray-200 shadow-sm">
+              <TabsTrigger value="mensual" className="data-[state=active]:bg-sky-100 data-[state=active]:text-sky-900 text-gray-700">
+                <Calendar className="h-4 w-4 mr-2" />
+                Mensual
+              </TabsTrigger>
+              <TabsTrigger value="anual" className="data-[state=active]:bg-sky-100 data-[state=active]:text-sky-900 text-gray-700">
+                <BarChart3 className="h-4 w-4 mr-2" />
+                Anual
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </div>
 
       <Card className="border-gray-200 bg-white">
@@ -205,33 +486,36 @@ export default function AgregarObjetivoPage() {
                 Administra los objetivos y su progreso por periodo
               </CardDescription>
             </div>
-            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full lg:w-auto">
-              <div className="flex gap-2">
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="w-20 sm:w-24 bg-slate-800 border-slate-700 text-white text-xs sm:text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    {availableMonths.map((month) => (
-                      <SelectItem key={month.value} value={month.value} className="text-white focus:bg-slate-700 text-xs sm:text-sm">
-                        {month.value}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={selectedYear} onValueChange={setSelectedYear}>
-                  <SelectTrigger className="w-20 sm:w-24 bg-slate-800 border-slate-700 text-white text-xs sm:text-sm">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    {years.map((year) => (
-                      <SelectItem key={year} value={year.toString()} className="text-white focus:bg-slate-700 text-xs sm:text-sm">
-                        {year}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
+              {viewType === "mensual" && (
+                <div className="flex gap-2">
+                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                    <SelectTrigger className="w-20 sm:w-24 bg-slate-800 border-slate-700 text-white text-xs sm:text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      {availableMonths.map((month) => (
+                        <SelectItem key={month.value} value={month.value} className="text-white focus:bg-slate-700 text-xs sm:text-sm">
+                          {month.value}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger className="w-20 sm:w-24 bg-slate-800 border-slate-700 text-white text-xs sm:text-sm">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      {years.map((year) => (
+                        <SelectItem key={year} value={year.toString()} className="text-white focus:bg-slate-700 text-xs sm:text-sm">
+                          {year}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
               <Button onClick={handleAddNew} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto text-xs sm:text-sm">
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Agregar Objetivo</span>
@@ -242,121 +526,166 @@ export default function AgregarObjetivoPage() {
         </CardHeader>
         <CardContent className="p-0">
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead className="bg-gray-50 border-b border-gray-200">
-                <tr>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Objetivo</th>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Valor Actual</th>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Valor Objetivo</th>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Progreso</th>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700 hidden sm:table-cell">Periodo</th>
-                  <th className="text-left px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200">
-                {objetivos.map((objetivo) => (
-                  <tr key={objetivo.id} className="hover:bg-gray-50 transition-colors">
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-gray-900 max-w-[150px] truncate" title={objetivo.nombre}>
-                      {objetivo.nombre}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
-                      {editingId === objetivo.id ? (
-                        <div className="space-y-1">
-                          <Input
-                            value={editValues.actual}
-                            onChange={(e) => setEditValues({ ...editValues, actual: e.target.value })}
-                            className="w-20 sm:w-24 bg-white border-gray-300 text-gray-900 text-xs sm:text-sm"
-                          />
-                          {validationError && editingId === objetivo.id && (
-                            <div className="flex items-center gap-1 text-xs text-red-600">
-                              <AlertCircle className="h-3 w-3" />
-                              {validationError}
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <span className="text-gray-900 font-medium">{objetivo.valorActual}</span>
-                      )}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm">
-                      {editingId === objetivo.id ? (
-                        <Input
-                          value={editValues.objetivo}
-                          onChange={(e) => setEditValues({ ...editValues, objetivo: e.target.value })}
-                          className="w-20 sm:w-24 bg-white border-gray-300 text-gray-900 text-xs sm:text-sm"
-                        />
-                      ) : (
-                        <span className="text-blue-600 font-medium">{objetivo.valorObjetivo}</span>
-                      )}
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4">
-                      <div className="flex items-center gap-1 sm:gap-2">
-                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[80px] sm:max-w-[100px]">
-                          <div
-                            className="h-full bg-blue-600 transition-all"
-                            style={{ width: `${objetivo.progreso}%` }}
-                          />
-                        </div>
-                        <span className="text-xs text-gray-500 w-8 sm:w-10">{objetivo.progreso}%</span>
-                      </div>
-                    </td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4 text-xs sm:text-sm text-slate-400 hidden sm:table-cell">{objetivo.periodo}</td>
-                    <td className="px-3 sm:px-6 py-3 sm:py-4">
-                      <div className="flex items-center gap-1 sm:gap-2">
-                        {editingId === objetivo.id ? (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => handleSaveEdit(objetivo.id)}
-                              className="bg-green-600 hover:bg-green-700 h-6 w-6 sm:h-8 sm:w-8 p-0"
-                              title="Guardar"
-                            >
-                              <Check className="h-3 w-3 sm:h-4 sm:w-4" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={handleCancelEdit}
-                              className="text-slate-400 hover:text-white hover:bg-slate-700 h-6 w-6 sm:h-8 sm:w-8 p-0"
-                              title="Cancelar"
-                            >
-                              <X className="h-3 w-3 sm:h-4 sm:w-4" />
-                            </Button>
-                          </>
-                        ) : (
-                          <>
-                            <Button
-                              size="sm"
-                              onClick={() => handleEdit(objetivo)}
-                              className="bg-amber-600 hover:bg-amber-700 h-6 w-6 sm:h-8 sm:w-8 p-0"
-                              title="Editar"
-                            >
-                              <Pencil className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleViewHistory(objetivo.id)}
-                              className="bg-purple-600 hover:bg-purple-700 h-6 w-6 sm:h-8 sm:w-8 p-0"
-                              title="Ver Histórico"
-                            >
-                              <History className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                            </Button>
-                            <Button
-                              size="sm"
-                              onClick={() => handleDeleteClick(objetivo.id)}
-                              className="bg-red-600 hover:bg-red-700 h-6 w-6 sm:h-8 sm:w-8 p-0"
-                              title="Eliminar"
-                            >
-                              <Trash2 className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                            </Button>
-                          </>
-                        )}
-                      </div>
-                    </td>
+            {viewType === "mensual" ? (
+              // Vista mensual (tabla tradicional simplificada)
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-center px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Objetivo</th>
+                    <th className="text-center px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Valor Objetivo</th>
+                    <th className="text-center px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Progreso</th>
+                    <th className="text-center px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Acciones</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {objetivos.map((objetivo) => (
+                    <tr key={objetivo.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm text-gray-900 max-w-[150px] truncate" title={objetivo.nombre}>
+                        {objetivo.nombre}
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm">
+                        <span className="text-blue-600 font-medium">{objetivo.valorObjetivo}</span>
+                      </td>
+                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
+                        <div className="flex items-center justify-center gap-1 sm:gap-2">
+                          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[80px] sm:max-w-[100px]">
+                            <div
+                              className="h-full bg-blue-600 transition-all"
+                              style={{ width: `${objetivo.progreso}%` }}
+                            />
+                          </div>
+                          <span className="text-xs text-gray-500 w-8 sm:w-10">{objetivo.progreso}%</span>
+                        </div>
+                      </td>
+                            <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
+                              <div className="flex items-center justify-center gap-2">
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleEdit(objetivo)}
+                                  variant="outline"
+                                  className="h-10 w-10 p-0 rounded-xl border-2 border-orange-500 text-orange-500 hover:bg-orange-50 hover:border-orange-600 hover:text-orange-600 transition-all duration-200"
+                                  title="Editar"
+                                >
+                                  <Pencil className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleViewHistory(objetivo.id)}
+                                  variant="outline"
+                                  className="h-10 w-10 p-0 rounded-xl border-2 border-blue-500 text-blue-500 hover:bg-blue-50 hover:border-blue-600 hover:text-blue-600 transition-all duration-200"
+                                  title="Ver Histórico"
+                                >
+                                  <History className="h-4 w-4" />
+                                </Button>
+                                <Button
+                                  size="sm"
+                                  onClick={() => handleDeleteClick(objetivo.id)}
+                                  variant="outline"
+                                  className="h-10 w-10 p-0 rounded-xl border-2 border-red-500 text-red-500 hover:bg-red-50 hover:border-red-600 hover:text-red-600 transition-all duration-200"
+                                  title="Eliminar"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : (
+              // Vista anual (matriz con todos los meses)
+              <table className="w-full">
+                <thead className="bg-gray-50 border-b border-gray-200">
+                  <tr>
+                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-700 sticky left-0 bg-gray-50 z-10 min-w-[150px]">
+                      Variable
+                    </th>
+                    {generateMonths().map((mes) => (
+                      <th key={mes} className="text-center px-2 py-3 text-xs font-semibold text-gray-700 min-w-[60px]">
+                        {mes}
+                      </th>
+                    ))}
+                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-700 sticky right-0 bg-gray-50 z-10 min-w-[120px]">
+                      Acciones
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {objetivos.map((objetivo) => (
+                    <tr key={objetivo.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-3 py-3 text-center text-xs text-gray-900 sticky left-0 bg-white z-10 font-medium" title={objetivo.nombre}>
+                        {objetivo.nombre}
+                      </td>
+                      {generateMonths().map((mes) => (
+                        <td key={mes} className="px-2 py-3 text-center text-xs">
+                          {editingCell?.variableId === objetivo.id && editingCell?.mes === mes && editingCell?.field === 'valor' ? (
+                            <div className="flex items-center gap-1">
+                              <Input
+                                value={inlineEditValue}
+                                onChange={(e) => setInlineEditValue(e.target.value)}
+                                className="w-20 h-6 text-xs"
+                                autoFocus
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') saveInlineEdit()
+                                  if (e.key === 'Escape') cancelInlineEdit()
+                                }}
+                                onBlur={saveInlineEdit}
+                              />
+                            </div>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                const valor = objetivo.valoresMensuales[mes]
+                                const valorStr = typeof valor === 'string' ? valor : (valor?.valor || "-")
+                                startInlineEdit(objetivo.id, mes, 'valor', valorStr)
+                              }}
+                              className="text-blue-600 font-medium hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                              title="Clic para editar"
+                            >
+                              {(() => {
+                                const valor = objetivo.valoresMensuales[mes]
+                                return typeof valor === 'string' ? valor : (valor?.valor || "-")
+                              })()}
+                            </button>
+                          )}
+                        </td>
+                      ))}
+                      <td className="px-3 py-3 text-center sticky right-0 bg-white z-10">
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => startFullEdit(objetivo)}
+                            variant="outline"
+                            className="h-10 w-10 p-0 rounded-xl border-2 border-orange-500 text-orange-500 hover:bg-orange-50 hover:border-orange-600 hover:text-orange-600 transition-all duration-200"
+                            title="Editar Todo"
+                          >
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleViewHistory(objetivo.id)}
+                            variant="outline"
+                            className="h-10 w-10 p-0 rounded-xl border-2 border-blue-500 text-blue-500 hover:bg-blue-50 hover:border-blue-600 hover:text-blue-600 transition-all duration-200"
+                            title="Ver Histórico"
+                          >
+                            <History className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            onClick={() => handleDeleteClick(objetivo.id)}
+                            variant="outline"
+                            className="h-10 w-10 p-0 rounded-xl border-2 border-red-500 text-red-500 hover:bg-red-50 hover:border-red-600 hover:text-red-600 transition-all duration-200"
+                            title="Eliminar"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -371,6 +700,165 @@ export default function AgregarObjetivoPage() {
           Regresar
         </Button>
       </div>
+
+      {/* Modal para agregar variable */}
+      <Dialog open={addVariableDialogOpen} onOpenChange={setAddVariableDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Plus className="h-5 w-5 text-blue-600" />
+              Agregar Nueva Variable
+            </DialogTitle>
+            <DialogDescription>
+              Selecciona una variable precargada y completa los valores mensuales
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Selector de variable */}
+            <div className="space-y-2">
+              <Label className="text-base font-medium">Seleccionar Variable</Label>
+              <Select value={newVariableName} onValueChange={(value) => {
+                const selectedVariable = precargadasVariables.find(v => v.nombre === value)
+                if (selectedVariable) {
+                  selectPreloadedVariable(selectedVariable)
+                }
+              }}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona una variable precargada..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {precargadasVariables.map((variable, index) => (
+                    <SelectItem key={index} value={variable.nombre}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{variable.nombre}</span>
+                        <span className="text-xs text-gray-500">{variable.valor} • {variable.mes}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {validationError && (
+                <div className="flex items-center gap-1 text-sm text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  {validationError}
+                </div>
+              )}
+            </div>
+
+            {/* Valores mensuales - Grid simple */}
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-medium text-gray-900">Valores Mensuales</h3>
+                <div className="text-sm text-gray-500">
+                  {(() => {
+                    const months = generateMonths()
+                    const filledMonths = months.filter(mes => {
+                      const monthData = newVariableValues[mes]
+                      return monthData && monthData.valor && monthData.valor.trim() !== ""
+                    }).length
+                    return `${filledMonths}/${months.length} meses completados`
+                  })()}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto border rounded-lg p-3">
+                {generateMonths().map((mes) => (
+                  <div key={mes} className="space-y-2 p-3 border rounded-lg bg-gray-50">
+                    <div className="text-sm font-medium text-gray-700">{mes}</div>
+                    <Input
+                      value={newVariableValues[mes]?.valor || ""}
+                      onChange={(e) => updateVariableValue(mes, 'valor', e.target.value)}
+                      placeholder="Valor"
+                      className="text-sm"
+                    />
+                    <Input
+                      value={newVariableValues[mes]?.observaciones || ""}
+                      onChange={(e) => updateVariableValue(mes, 'observaciones', e.target.value)}
+                      placeholder="Observaciones"
+                      className="text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={handleCancelAddVariable}
+              disabled={isAddingVariable}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleSaveVariable}
+              disabled={isAddingVariable || !isFormValid()}
+              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+            >
+              {isAddingVariable ? "Guardando..." : "Guardar Variable"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de edición completa */}
+      <Dialog open={editVariableDialogOpen} onOpenChange={setEditVariableDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Pencil className="h-5 w-5 text-amber-600" />
+              Editar Variable: {editingVariable?.nombre}
+            </DialogTitle>
+            <DialogDescription>
+              Modifica los valores mensuales de esta variable
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Valores mensuales - Grid simple */}
+            <div className="space-y-3">
+              <h3 className="text-base font-medium text-gray-900">Valores Mensuales</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto border rounded-lg p-3">
+                {generateMonths().map((mes) => (
+                  <div key={mes} className="space-y-2 p-3 border rounded-lg bg-gray-50">
+                    <div className="text-sm font-medium text-gray-700">{mes}</div>
+                    <Input
+                      value={editVariableValues[mes]?.valor || ""}
+                      onChange={(e) => updateEditVariableValue(mes, 'valor', e.target.value)}
+                      placeholder="Valor"
+                      className="text-sm"
+                    />
+                    <Input
+                      value={editVariableValues[mes]?.observaciones || ""}
+                      onChange={(e) => updateEditVariableValue(mes, 'observaciones', e.target.value)}
+                      placeholder="Observaciones"
+                      className="text-sm"
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={cancelFullEdit}
+              disabled={isSavingEdit}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={saveFullEdit}
+              disabled={isSavingEdit}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              {isSavingEdit ? "Guardando..." : "Guardar Cambios"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

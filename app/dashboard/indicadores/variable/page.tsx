@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar, Eye } from "lucide-react"
+import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar, Eye, ChevronDown } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -27,6 +27,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface VariableRow {
   id_Variable_EmpresaGerencia_Hechos: number
@@ -59,6 +60,7 @@ export default function VariablesPage() {
   // Estado para selector de mes
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date())
   const [availableMonths, setAvailableMonths] = useState<string[]>([])
+  const [availableYears, setAvailableYears] = useState<number[]>([])
   
   // Estado para agregar variable del próximo mes
   const [addNextMonthDialogOpen, setAddNextMonthDialogOpen] = useState(false)
@@ -103,6 +105,11 @@ export default function VariablesPage() {
       }
       setVariables(json.data || [])
       setAvailableMonths(json.periodos || [])
+      
+      // Extraer años únicos de los períodos disponibles
+      const years = [...new Set((json.periodos || []).map((period: string) => new Date(period).getFullYear()))]
+        .sort((a, b) => b - a) // Ordenar de más reciente a más antiguo
+      setAvailableYears(years)
     } catch (e: any) {
       console.error('Error en fetchVariables:', e)
       setError(e.message || 'Error cargando indicadores mensuales')
@@ -143,6 +150,12 @@ export default function VariablesPage() {
   const selectMonth = (monthIndex: number) => {
     const newDate = new Date(selectedMonth)
     newDate.setMonth(monthIndex)
+    setSelectedMonth(newDate)
+  }
+
+  const selectYear = (year: number) => {
+    const newDate = new Date(selectedMonth)
+    newDate.setFullYear(year)
     setSelectedMonth(newDate)
   }
 
@@ -312,18 +325,30 @@ export default function VariablesPage() {
       {/* Selector de Mes */}
       <Card className="border-gray-200 bg-white shadow-md">
         <CardContent className="p-2 sm:p-3">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 mb-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 mb-3">
             <div>
               <h2 className="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-1.5">
                 <Calendar className="h-3.5 w-3.5 text-blue-600" />
                 Seleccionar Período
               </h2>
             </div>
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 text-blue-800 px-2.5 py-0.5 rounded-lg text-xs font-bold">
-              {variables.length > 0 
-                ? `${variables.length} indicador${variables.length !== 1 ? 'es' : ''}` 
-                : 'Sin datos'
-              }
+            <div className="flex items-center gap-2">
+              <label className="text-xs font-semibold text-gray-700">Año:</label>
+              <Select 
+                value={selectedMonth.getFullYear().toString()} 
+                onValueChange={(value) => selectYear(parseInt(value))}
+              >
+                <SelectTrigger className="w-24 h-8 text-xs border-gray-300 focus:border-blue-500 focus:ring-blue-500">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {availableYears.map((year) => (
+                    <SelectItem key={year} value={year.toString()} className="text-xs">
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
           
