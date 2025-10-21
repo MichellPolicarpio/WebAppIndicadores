@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Plus, Target, Pencil, Check, X, History, Trash2, AlertCircle, Calendar, BarChart3 } from "lucide-react"
+import { ArrowLeft, Plus, Target, Pencil, Check, X, History, Trash2, AlertCircle, Calendar, BarChart3, Edit3 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import {
@@ -191,27 +191,32 @@ export default function AgregarObjetivoPage() {
   const [isSavingEdit, setIsSavingEdit] = useState(false)
   const [editingCell, setEditingCell] = useState<{variableId: string, mes: string, field: 'valor' | 'observaciones'} | null>(null)
   const [inlineEditValue, setInlineEditValue] = useState("")
+  
+  // Estado para edición de fila específica
+  const [editingRowId, setEditingRowId] = useState<string | null>(null)
+  const [rowEditValues, setRowEditValues] = useState<{[mes: string]: string}>({})
+  const [isSavingRow, setIsSavingRow] = useState(false)
 
-  // Variables precargadas simuladas
-  const precargadasVariables = [
-    { nombre: "Cartera de clientes (mdp)", valor: "1,547.1", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Clientes domésticos", valor: "196,692", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Clientes no domésticos", valor: "15,020", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Cortes de servicio", valor: "2,868", mes: "May 2025", observaciones: "-" },
-    { nombre: "Facturación total con IVA (mdp)", valor: "114.4", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Facturación total sin IVA (mdp)", valor: "104.9", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Número de clientes", valor: "211,712", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Número de clientes con servicio medido", valor: "77,095", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Número de clientes con servicio suspendido", valor: "33,058", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Número de reclamaciones en curso", valor: "2", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Número de reclamaciones registradas", valor: "46", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Número de reclamaciones resueltas", valor: "44", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Plazo medio de resolución (dias naturales)", valor: "8", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Recargos totales (mdp)", valor: "19", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Recaudación (mdp)", valor: "76.26", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Recaudación por cortes de servicio ejecutado", valor: "11.94", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Recaudación propia (mdp)", valor: "76.26", mes: "May 2025", observaciones: "Carga masiva" },
-    { nombre: "Recibos (mdp)", valor: "8", mes: "May 2025", observaciones: "Carga masiva" }
+  // Variables disponibles para seleccionar
+  const variablesDisponibles = [
+    "Cartera de clientes (mdp)",
+    "Clientes domésticos", 
+    "Clientes no domésticos",
+    "Cortes de servicio",
+    "Facturación total con IVA (mdp)",
+    "Facturación total sin IVA (mdp)",
+    "Número de clientes",
+    "Número de clientes con servicio medido",
+    "Número de clientes con servicio suspendido",
+    "Número de reclamaciones en curso",
+    "Número de reclamaciones registradas",
+    "Número de reclamaciones resueltas",
+    "Plazo medio de resolución (dias naturales)",
+    "Recargos totales (mdp)",
+    "Recaudación (mdp)",
+    "Recaudación por cortes de servicio ejecutado",
+    "Recaudación propia (mdp)",
+    "Recibos (mdp)"
   ]
 
   const handleEdit = (objetivo: Objetivo) => {
@@ -331,17 +336,10 @@ export default function AgregarObjetivoPage() {
     })
   }
 
-  const selectPreloadedVariable = (variable: typeof precargadasVariables[0]) => {
-    setNewVariableName(variable.nombre)
-    // Precargar el valor en el mes correspondiente (May = índice 4)
-    const mesIndex = 4 // May
-    const mesName = generateMonths()[mesIndex]
-    setNewVariableValues({
-      [mesName]: {
-        valor: variable.valor,
-        observaciones: variable.observaciones
-      }
-    })
+  const selectPreloadedVariable = (variableName: string) => {
+    setNewVariableName(variableName)
+    // No precargar valores, solo seleccionar la variable
+    setNewVariableValues({})
   }
 
   // ==================== EDICIÓN HÍBRIDA ====================
@@ -441,6 +439,52 @@ export default function AgregarObjetivoPage() {
     }))
   }
 
+  // ==================== EDICIÓN DE FILA ESPECÍFICA ====================
+  
+  // Iniciar edición de fila específica
+  const startRowEdit = (objetivo: Objetivo) => {
+    setEditingRowId(objetivo.id)
+    setRowEditValues({...objetivo.valoresMensuales})
+  }
+
+  // Guardar edición de fila específica
+  const saveRowEdit = async () => {
+    if (!editingRowId) return
+    
+    setIsSavingRow(true)
+    try {
+      setObjetivos(prev => prev.map(obj => 
+        obj.id === editingRowId 
+          ? {
+              ...obj,
+              valoresMensuales: rowEditValues
+            }
+          : obj
+      ))
+      
+      setEditingRowId(null)
+      setRowEditValues({})
+    } catch (error) {
+      console.error("Error guardando edición de fila:", error)
+    } finally {
+      setIsSavingRow(false)
+    }
+  }
+
+  // Cancelar edición de fila específica
+  const cancelRowEdit = () => {
+    setEditingRowId(null)
+    setRowEditValues({})
+  }
+
+  // Actualizar valor en edición de fila
+  const updateRowEditValue = (mes: string, value: string) => {
+    setRowEditValues(prev => ({
+      ...prev,
+      [mes]: value
+    }))
+  }
+
   return (
     <div className="space-y-6 max-w-6xl mx-auto px-4 sm:px-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
@@ -488,32 +532,49 @@ export default function AgregarObjetivoPage() {
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
               {viewType === "mensual" && (
-                <div className="flex gap-2">
-                  <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                    <SelectTrigger className="w-20 sm:w-24 bg-slate-800 border-slate-700 text-white text-xs sm:text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700">
-                      {availableMonths.map((month) => (
-                        <SelectItem key={month.value} value={month.value} className="text-white focus:bg-slate-700 text-xs sm:text-sm">
-                          {month.value}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={selectedYear} onValueChange={setSelectedYear}>
-                    <SelectTrigger className="w-20 sm:w-24 bg-slate-800 border-slate-700 text-white text-xs sm:text-sm">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-800 border-slate-700">
-                      {years.map((year) => (
-                        <SelectItem key={year} value={year.toString()} className="text-white focus:bg-slate-700 text-xs sm:text-sm">
-                          {year}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                        <div className="flex gap-2">
+                          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                            <SelectTrigger className="w-20 sm:w-24 bg-white border-gray-300 text-gray-700 text-xs sm:text-sm hover:border-blue-400 focus:border-blue-500">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-300">
+                              {availableMonths.map((month) => (
+                                <SelectItem key={month.value} value={month.value} className="text-gray-700 focus:bg-blue-50 text-xs sm:text-sm">
+                                  {month.value}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select value={selectedYear} onValueChange={setSelectedYear}>
+                            <SelectTrigger className="w-20 sm:w-24 bg-white border-gray-300 text-gray-700 text-xs sm:text-sm hover:border-blue-400 focus:border-blue-500">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-300">
+                              {years.map((year) => (
+                                <SelectItem key={year} value={year.toString()} className="text-gray-700 focus:bg-blue-50 text-xs sm:text-sm">
+                                  {year}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+              )}
+              
+              {viewType === "anual" && (
+                        <div className="flex gap-2">
+                          <Select value={selectedYear} onValueChange={setSelectedYear}>
+                            <SelectTrigger className="w-20 sm:w-24 bg-white border-gray-300 text-gray-700 text-xs sm:text-sm hover:border-blue-400 focus:border-blue-500">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-white border-gray-300">
+                              {years.map((year) => (
+                                <SelectItem key={year} value={year.toString()} className="text-gray-700 focus:bg-blue-50 text-xs sm:text-sm">
+                                  {year}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
               )}
               
               <Button onClick={handleAddNew} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto text-xs sm:text-sm">
@@ -618,7 +679,14 @@ export default function AgregarObjetivoPage() {
                       </td>
                       {generateMonths().map((mes) => (
                         <td key={mes} className="px-2 py-3 text-center text-xs">
-                          {editingCell?.variableId === objetivo.id && editingCell?.mes === mes && editingCell?.field === 'valor' ? (
+                          {editingRowId === objetivo.id ? (
+                            <Input
+                              value={rowEditValues[mes] || ""}
+                              onChange={(e) => updateRowEditValue(mes, e.target.value)}
+                              className="w-20 h-6 text-xs"
+                              placeholder="Valor"
+                            />
+                          ) : editingCell?.variableId === objetivo.id && editingCell?.mes === mes && editingCell?.field === 'valor' ? (
                             <div className="flex items-center gap-1">
                               <Input
                                 value={inlineEditValue}
@@ -652,33 +720,68 @@ export default function AgregarObjetivoPage() {
                       ))}
                       <td className="px-3 py-3 text-center sticky right-0 bg-white z-10">
                         <div className="flex items-center justify-center gap-2">
-                          <Button
-                            size="sm"
-                            onClick={() => startFullEdit(objetivo)}
-                            variant="outline"
-                            className="h-10 w-10 p-0 rounded-xl border-2 border-orange-500 text-orange-500 hover:bg-orange-50 hover:border-orange-600 hover:text-orange-600 transition-all duration-200"
-                            title="Editar Todo"
-                          >
-                            <Pencil className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleViewHistory(objetivo.id)}
-                            variant="outline"
-                            className="h-10 w-10 p-0 rounded-xl border-2 border-blue-500 text-blue-500 hover:bg-blue-50 hover:border-blue-600 hover:text-blue-600 transition-all duration-200"
-                            title="Ver Histórico"
-                          >
-                            <History className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            size="sm"
-                            onClick={() => handleDeleteClick(objetivo.id)}
-                            variant="outline"
-                            className="h-10 w-10 p-0 rounded-xl border-2 border-red-500 text-red-500 hover:bg-red-50 hover:border-red-600 hover:text-red-600 transition-all duration-200"
-                            title="Eliminar"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+                          {editingRowId === objetivo.id ? (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={saveRowEdit}
+                                variant="outline"
+                                disabled={isSavingRow}
+                                className="h-10 w-10 p-0 rounded-xl border-2 border-green-500 text-green-500 hover:bg-green-50 hover:border-green-600 hover:text-green-600 transition-all duration-200"
+                                title="Guardar Cambios"
+                              >
+                                <Check className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={cancelRowEdit}
+                                variant="outline"
+                                className="h-10 w-10 p-0 rounded-xl border-2 border-gray-500 text-gray-500 hover:bg-gray-50 hover:border-gray-600 hover:text-gray-600 transition-all duration-200"
+                                title="Cancelar"
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </>
+                          ) : (
+                            <>
+                              <Button
+                                size="sm"
+                                onClick={() => startRowEdit(objetivo)}
+                                variant="outline"
+                                className="h-10 w-10 p-0 rounded-xl border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-50 hover:border-emerald-600 hover:text-emerald-600 transition-all duration-200"
+                                title="Editar Fila"
+                              >
+                                <Edit3 className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => startFullEdit(objetivo)}
+                                variant="outline"
+                                className="h-10 w-10 p-0 rounded-xl border-2 border-orange-500 text-orange-500 hover:bg-orange-50 hover:border-orange-600 hover:text-orange-600 transition-all duration-200"
+                                title="Editar Todo"
+                              >
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleViewHistory(objetivo.id)}
+                                variant="outline"
+                                className="h-10 w-10 p-0 rounded-xl border-2 border-blue-500 text-blue-500 hover:bg-blue-50 hover:border-blue-600 hover:text-blue-600 transition-all duration-200"
+                                title="Ver Histórico"
+                              >
+                                <History className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleDeleteClick(objetivo.id)}
+                                variant="outline"
+                                className="h-10 w-10 p-0 rounded-xl border-2 border-red-500 text-red-500 hover:bg-red-50 hover:border-red-600 hover:text-red-600 transition-all duration-200"
+                                title="Eliminar"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -690,16 +793,6 @@ export default function AgregarObjetivoPage() {
         </CardContent>
       </Card>
 
-      <div className="flex justify-center sm:justify-start">
-        <Button
-          variant="outline"
-          onClick={() => router.push("/dashboard/indicadores")}
-          className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white w-full sm:w-auto"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Regresar
-        </Button>
-      </div>
 
       {/* Modal para agregar variable */}
       <Dialog open={addVariableDialogOpen} onOpenChange={setAddVariableDialogOpen}>
@@ -710,34 +803,28 @@ export default function AgregarObjetivoPage() {
               Agregar Nueva Variable
             </DialogTitle>
             <DialogDescription>
-              Selecciona una variable precargada y completa los valores mensuales
+              Selecciona una variable disponible y completa los valores mensuales
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
             {/* Selector de variable */}
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Seleccionar Variable</Label>
-              <Select value={newVariableName} onValueChange={(value) => {
-                const selectedVariable = precargadasVariables.find(v => v.nombre === value)
-                if (selectedVariable) {
-                  selectPreloadedVariable(selectedVariable)
-                }
-              }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecciona una variable precargada..." />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {precargadasVariables.map((variable, index) => (
-                    <SelectItem key={index} value={variable.nombre}>
-                      <div className="flex flex-col">
-                        <span className="font-medium">{variable.nombre}</span>
-                        <span className="text-xs text-gray-500">{variable.valor} • {variable.mes}</span>
-                      </div>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                  <div className="space-y-2">
+                    <Label className="text-base font-medium">Seleccionar Variable</Label>
+                    <Select value={newVariableName} onValueChange={(value) => {
+                      selectPreloadedVariable(value)
+                    }}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Selecciona una variable disponible..." />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-60">
+                        {variablesDisponibles.map((variable, index) => (
+                          <SelectItem key={index} value={variable}>
+                            <span className="font-medium">{variable}</span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
               {validationError && (
                 <div className="flex items-center gap-1 text-sm text-red-600">
                   <AlertCircle className="h-4 w-4" />
