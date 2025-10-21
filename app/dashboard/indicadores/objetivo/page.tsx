@@ -451,19 +451,20 @@ export default function AgregarObjetivoPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto px-4 sm:px-6">
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+    <div className="space-y-2 sm:space-y-3 w-full mx-auto px-3 sm:px-4 lg:px-6 max-w-7xl">
+      {/* Header Section */}
+      <div className="flex items-start gap-3 sm:gap-4">
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
           onClick={() => router.push("/dashboard/indicadores")}
-          className="text-slate-400 hover:text-white hover:bg-slate-800 self-start"
+          className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex-shrink-0 mt-1"
         >
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <div className="flex-1">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Objetivos guardados</h1>
-          <p className="text-gray-600 mt-1 text-sm sm:text-base">Gestiona los objetivos y metas del sistema</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Objetivos</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">Gestiona los objetivos y metas del sistema</p>
         </div>
         
         {/* Toggle de vista centrado */}
@@ -483,15 +484,14 @@ export default function AgregarObjetivoPage() {
         </div>
       </div>
 
-      <Card className="border-gray-200 bg-white">
-        <CardHeader className="border-b border-gray-200 p-4 sm:p-6">
-          <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+      <Card className="border-gray-200 bg-white shadow-md">
+        <CardHeader className="border-b border-gray-200 bg-white">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>
-              <CardTitle className="text-gray-900 text-lg sm:text-xl flex items-center gap-2">
-                <Target className="h-4 w-4 sm:h-5 sm:w-5 text-blue-500" />
-                Objetivos guardados: {objetivos.length}/20
+              <CardTitle className="text-xl sm:text-2xl text-gray-900">
+                Objetivos: {objetivos.length}/20
               </CardTitle>
-              <CardDescription className="text-gray-600 text-sm sm:text-base">
+              <CardDescription className="text-sm sm:text-base text-gray-600 mt-1">
                 Administra los objetivos y su progreso por periodo
               </CardDescription>
             </div>
