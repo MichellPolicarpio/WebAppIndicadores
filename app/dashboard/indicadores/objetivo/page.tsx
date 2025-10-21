@@ -189,8 +189,6 @@ export default function AgregarObjetivoPage() {
   const [editVariableDialogOpen, setEditVariableDialogOpen] = useState(false)
   const [editVariableValues, setEditVariableValues] = useState<{[mes: string]: {valor: string, observaciones: string}}>({})
   const [isSavingEdit, setIsSavingEdit] = useState(false)
-  const [editingCell, setEditingCell] = useState<{variableId: string, mes: string, field: 'valor' | 'observaciones'} | null>(null)
-  const [inlineEditValue, setInlineEditValue] = useState("")
   
   // Estado para edición de fila específica
   const [editingRowId, setEditingRowId] = useState<string | null>(null)
@@ -343,39 +341,6 @@ export default function AgregarObjetivoPage() {
   }
 
   // ==================== EDICIÓN HÍBRIDA ====================
-  
-  // Edición inline - clic en celda
-  const startInlineEdit = (variableId: string, mes: string, field: 'valor' | 'observaciones', currentValue: string) => {
-    setEditingCell({ variableId, mes, field })
-    setInlineEditValue(currentValue)
-  }
-
-  // Guardar edición inline
-  const saveInlineEdit = () => {
-    if (!editingCell) return
-    
-    const { variableId, mes, field } = editingCell
-    setObjetivos(prev => prev.map(obj => 
-      obj.id === variableId 
-        ? {
-            ...obj,
-            valoresMensuales: {
-              ...obj.valoresMensuales,
-              [mes]: inlineEditValue
-            }
-          }
-        : obj
-    ))
-    
-    setEditingCell(null)
-    setInlineEditValue("")
-  }
-
-  // Cancelar edición inline
-  const cancelInlineEdit = () => {
-    setEditingCell(null)
-    setInlineEditValue("")
-  }
 
   // Edición completa - modal
   const startFullEdit = (objetivo: Objetivo) => {
@@ -686,35 +651,13 @@ export default function AgregarObjetivoPage() {
                               className="w-20 h-6 text-xs"
                               placeholder="Valor"
                             />
-                          ) : editingCell?.variableId === objetivo.id && editingCell?.mes === mes && editingCell?.field === 'valor' ? (
-                            <div className="flex items-center gap-1">
-                              <Input
-                                value={inlineEditValue}
-                                onChange={(e) => setInlineEditValue(e.target.value)}
-                                className="w-20 h-6 text-xs"
-                                autoFocus
-                                onKeyDown={(e) => {
-                                  if (e.key === 'Enter') saveInlineEdit()
-                                  if (e.key === 'Escape') cancelInlineEdit()
-                                }}
-                                onBlur={saveInlineEdit}
-                              />
-                            </div>
                           ) : (
-                            <button
-                              onClick={() => {
-                                const valor = objetivo.valoresMensuales[mes]
-                                const valorStr = typeof valor === 'string' ? valor : (valor?.valor || "-")
-                                startInlineEdit(objetivo.id, mes, 'valor', valorStr)
-                              }}
-                              className="text-blue-600 font-medium hover:bg-blue-50 px-2 py-1 rounded transition-colors"
-                              title="Clic para editar"
-                            >
+                            <span className="text-blue-600 font-medium">
                               {(() => {
                                 const valor = objetivo.valoresMensuales[mes]
                                 return typeof valor === 'string' ? valor : (valor?.valor || "-")
                               })()}
-                            </button>
+                            </span>
                           )}
                         </td>
                       ))}
