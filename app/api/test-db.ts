@@ -1,60 +1,40 @@
-import type { NextApiRequest, NextApiResponse } from "next";
 import sql from "mssql";
 
-// 🔧 Forzar runtime Node.js (no Edge)
-export const config = { runtime: "nodejs" };
+// Fuerza runtime Node.js (no Edge)
+export const runtime = "nodejs";
 
-export default async function handler(req: NextApiRequest, res: NextApiResponse) {
+function connStr() {
+  const { DB_SERVER, DB_DATABASE, DB_USER, DB_PASSWORD, DB_PORT } = process.env;
+  if (!DB_SERVER || !DB_DATABASE || !DB_USER || !DB_PASSWORD) {
+    throw new Error("Variables de entorno de DB incompletas");
+  }
+  const port = DB_PORT || "1433";
+  return `Server=${DB_SERVER},${port};Database=${DB_DATABASE};User Id=${DB_USER};Password=${DB_PASSWORD};Encrypt=true;TrustServerCertificate=false;`;
+}
+
+export async function GET() {
   try {
-    // Validar variables de entorno
-    if (
-      !process.env.DB_SERVER ||
-      !process.env.DB_DATABASE ||
-      !process.env.DB_USER ||
-      !process.env.DB_PASSWORD ||
-      !process.env.DB_PORT
-    ) {
-      return res.status(500).json({
-        success: false,
-        message: "Variables de entorno de base de datos no configuradas",
-      });
-    }
+    try { await sql.close(); } catch {}
 
-    // Configuración de conexión a Azure SQL
-    const dbConfig: sql.config = {
-      server: process.env.DB_SERVER,
-      database: process.env.DB_DATABASE,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      port: parseInt(process.env.DB_PORT || "1433", 10),
-      encrypt: true, // Asegura encriptación TLS
-      options: {
-        encrypt: true,               // Obligatorio para Azure SQL
-        trustServerCertificate: false, // No confiar en certificados autofirmados
-      },
-      pool: {
-        max: 5,
-        min: 0,
-        idleTimeoutMillis: 30000,
-      },
-    };
-
-    // Conexión y prueba de consulta
-    const pool = await sql.connect(dbConfig);
-    const result = await pool.request().query("SELECT TOP 1 name FROM sys.tables");
-    await pool.close();
-
-    res.status(200).json({
-      success: true,
-      message: "Conexión exitosa a la base de datos",
-      tables: result.recordset,
+    const pool = await sql.connect({
+      connectionString: connStr(),
+      driver: "tedious",
+      options: { encrypt: true, trustServerCertificate: false },
     });
-  } catch (err: any) {
-    res.status(500).json({
+
+    const r = await pool.request().query("SELECT TOP 1 name FROM sys.tables");
+    await sql.close();
+
+    return new Response(JSON.stringify({ success: true, message: "Conexión exitosa", tables: r.recordset }), {
+      status: 200,
+      headers: { "content-type": "application/json" },
+    });
+  } catch (e: any) {
+    return new Response(JSON.stringify({
       success: false,
       message: "Error de conexión",
-      error: err.message,
-      details: { code: err.code, name: err.name },
-    });
+      error: e?.message,
+      details: { code: e?.code, name: e?.name },
+    }), { status: 500, headers: { "content-type": "application/json" } });
   }
 }
