@@ -167,6 +167,69 @@ export default function AgregarObjetivoPage() {
       periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
       progreso: 60,
     },
+    {
+      id: "5",
+      nombre: "Tiempo promedio de respuesta",
+      valorObjetivo: "2.5 horas",
+      valoresMensuales: {
+        "Ene": "4.2 horas",
+        "Feb": "3.8 horas",
+        "Mar": "3.5 horas",
+        "Abr": "3.2 horas",
+        "May": "3.0 horas",
+        "Jun": "2.8 horas",
+        "Jul": "2.6 horas",
+        "Ago": "2.5 horas",
+        "Set": "2.4 horas",
+        "Oct": "2.3 horas",
+        "Nov": "2.2 horas",
+        "Dic": "2.1 horas"
+      },
+      periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
+      progreso: 85,
+    },
+    {
+      id: "6",
+      nombre: "Cumplimiento de presupuesto",
+      valorObjetivo: "95%",
+      valoresMensuales: {
+        "Ene": "88%",
+        "Feb": "89%",
+        "Mar": "90%",
+        "Abr": "91%",
+        "May": "92%",
+        "Jun": "93%",
+        "Jul": "94%",
+        "Ago": "94%",
+        "Set": "95%",
+        "Oct": "95%",
+        "Nov": "96%",
+        "Dic": "97%"
+      },
+      periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
+      progreso: 72,
+    },
+    {
+      id: "7",
+      nombre: "Capacitación del personal",
+      valorObjetivo: "100%",
+      valoresMensuales: {
+        "Ene": "75%",
+        "Feb": "80%",
+        "Mar": "85%",
+        "Abr": "88%",
+        "May": "90%",
+        "Jun": "92%",
+        "Jul": "94%",
+        "Ago": "96%",
+        "Set": "98%",
+        "Oct": "99%",
+        "Nov": "100%",
+        "Dic": "100%"
+      },
+      periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
+      progreso: 88,
+    },
   ])
 
   const [selectedMonth, setSelectedMonth] = useState(getMonthName(currentDate.month))
@@ -451,7 +514,7 @@ export default function AgregarObjetivoPage() {
   }
 
   return (
-    <div className="space-y-2 sm:space-y-3 w-full mx-auto px-3 sm:px-4 lg:px-6 max-w-7xl">
+    <div className="space-y-2 sm:space-y-3 w-full mx-auto px-3 sm:px-4 lg:px-6 max-w-7xl 2xl:max-w-[90vw] 3xl:max-w-[85vw]">
       {/* Header Section */}
       <div className="flex items-start gap-3 sm:gap-4">
         <Button
@@ -554,33 +617,33 @@ export default function AgregarObjetivoPage() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="text-center px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Objetivo</th>
-                    <th className="text-center px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Valor Objetivo</th>
-                    <th className="text-center px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Progreso</th>
-                    <th className="text-center px-3 sm:px-6 py-3 text-xs sm:text-sm font-semibold text-gray-700">Acciones</th>
+                    <th className="text-center px-3 sm:px-6 xl:px-8 py-3 text-xs sm:text-sm font-semibold text-gray-700 min-w-[200px] xl:min-w-[300px]">Objetivo</th>
+                    <th className="text-center px-3 sm:px-6 xl:px-8 py-3 text-xs sm:text-sm font-semibold text-gray-700 min-w-[120px] xl:min-w-[150px]">Valor Objetivo</th>
+                    <th className="text-center px-3 sm:px-6 xl:px-8 py-3 text-xs sm:text-sm font-semibold text-gray-700 min-w-[150px] xl:min-w-[200px]">Progreso</th>
+                    <th className="text-center px-3 sm:px-6 xl:px-8 py-3 text-xs sm:text-sm font-semibold text-gray-700 min-w-[180px] xl:min-w-[220px]">Acciones</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
                   {objetivos.map((objetivo) => (
                     <tr key={objetivo.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm text-gray-900 max-w-[150px] truncate" title={objetivo.nombre}>
+                      <td className="px-3 sm:px-6 xl:px-8 py-3 sm:py-4 text-center text-xs sm:text-sm text-gray-900 max-w-[200px] xl:max-w-[300px] truncate" title={objetivo.nombre}>
                         {objetivo.nombre}
                       </td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center text-xs sm:text-sm">
+                      <td className="px-3 sm:px-6 xl:px-8 py-3 sm:py-4 text-center text-xs sm:text-sm">
                         <span className="text-blue-600 font-medium">{objetivo.valorObjetivo}</span>
                       </td>
-                      <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
+                      <td className="px-3 sm:px-6 xl:px-8 py-3 sm:py-4 text-center">
                         <div className="flex items-center justify-center gap-1 sm:gap-2">
-                          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[80px] sm:max-w-[100px]">
+                          <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden max-w-[80px] sm:max-w-[100px] xl:max-w-[150px]">
                             <div
                               className="h-full bg-blue-600 transition-all"
                               style={{ width: `${objetivo.progreso}%` }}
                             />
                           </div>
-                          <span className="text-xs text-gray-500 w-8 sm:w-10">{objetivo.progreso}%</span>
+                          <span className="text-xs text-gray-500 w-8 sm:w-10 xl:w-12">{objetivo.progreso}%</span>
                         </div>
                       </td>
-                            <td className="px-3 sm:px-6 py-3 sm:py-4 text-center">
+                            <td className="px-3 sm:px-6 xl:px-8 py-3 sm:py-4 text-center">
                               <div className="flex items-center justify-center gap-2">
                                 <Button
                                   size="sm"
@@ -620,15 +683,15 @@ export default function AgregarObjetivoPage() {
               <table className="w-full">
                 <thead className="bg-gray-50 border-b border-gray-200">
                   <tr>
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-700 sticky left-0 bg-gray-50 z-10 min-w-[150px]">
+                    <th className="text-center px-3 xl:px-6 py-3 text-xs font-semibold text-gray-700 sticky left-0 bg-gray-50 z-10 min-w-[150px] xl:min-w-[200px]">
                       Variable
                     </th>
                     {generateMonths().map((mes) => (
-                      <th key={mes} className="text-center px-2 py-3 text-xs font-semibold text-gray-700 min-w-[60px]">
+                      <th key={mes} className="text-center px-2 xl:px-4 py-3 text-xs font-semibold text-gray-700 min-w-[60px] xl:min-w-[80px]">
                         {mes}
                       </th>
                     ))}
-                    <th className="text-center px-3 py-3 text-xs font-semibold text-gray-700 sticky right-0 bg-gray-50 z-10 min-w-[120px]">
+                    <th className="text-center px-3 xl:px-6 py-3 text-xs font-semibold text-gray-700 sticky right-0 bg-gray-50 z-10 min-w-[120px] xl:min-w-[180px]">
                       Acciones
                     </th>
                   </tr>
@@ -636,16 +699,16 @@ export default function AgregarObjetivoPage() {
                 <tbody className="divide-y divide-gray-200">
                   {objetivos.map((objetivo) => (
                     <tr key={objetivo.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-3 py-3 text-center text-xs text-gray-900 sticky left-0 bg-white z-10 font-medium" title={objetivo.nombre}>
+                      <td className="px-3 xl:px-6 py-3 text-center text-xs text-gray-900 sticky left-0 bg-white z-10 font-medium max-w-[150px] xl:max-w-[200px] truncate" title={objetivo.nombre}>
                         {objetivo.nombre}
                       </td>
                       {generateMonths().map((mes) => (
-                        <td key={mes} className="px-2 py-3 text-center text-xs">
+                        <td key={mes} className="px-2 xl:px-4 py-3 text-center text-xs">
                           {editingRowId === objetivo.id ? (
                             <Input
                               value={rowEditValues[mes] || ""}
                               onChange={(e) => updateRowEditValue(mes, e.target.value)}
-                              className="w-20 h-6 text-xs"
+                              className="w-20 xl:w-24 h-6 text-xs"
                               placeholder="Valor"
                             />
                           ) : (
@@ -658,7 +721,7 @@ export default function AgregarObjetivoPage() {
                           )}
                         </td>
                       ))}
-                      <td className="px-3 py-3 text-center sticky right-0 bg-white z-10">
+                      <td className="px-3 xl:px-6 py-3 text-center sticky right-0 bg-white z-10">
                         <div className="flex items-center justify-center gap-2">
                           {editingRowId === objetivo.id ? (
                             <>
