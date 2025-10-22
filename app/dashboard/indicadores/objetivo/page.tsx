@@ -171,7 +171,7 @@ export default function AgregarObjetivoPage() {
 
   const [selectedMonth, setSelectedMonth] = useState(getMonthName(currentDate.month))
   const [selectedYear, setSelectedYear] = useState(currentDate.year.toString())
-  const [viewType, setViewType] = useState<"mensual" | "anual">("mensual")
+  const [viewType, setViewType] = useState<"mensual" | "anual">("anual")
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editValues, setEditValues] = useState({ actual: "", objetivo: "" })
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
@@ -491,9 +491,6 @@ export default function AgregarObjetivoPage() {
               <CardTitle className="text-xl sm:text-2xl text-gray-900">
                 Objetivos: {objetivos.length}/20
               </CardTitle>
-              <CardDescription className="text-sm sm:text-base text-gray-600 mt-1">
-                Administra los objetivos y su progreso por periodo
-              </CardDescription>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
               {viewType === "mensual" && (
@@ -691,19 +688,10 @@ export default function AgregarObjetivoPage() {
                                 size="sm"
                                 onClick={() => startRowEdit(objetivo)}
                                 variant="outline"
-                                className="h-10 w-10 p-0 rounded-xl border-2 border-emerald-500 text-emerald-500 hover:bg-emerald-50 hover:border-emerald-600 hover:text-emerald-600 transition-all duration-200"
+                                className="h-10 w-10 p-0 rounded-xl border-2 border-orange-500 text-orange-500 hover:bg-orange-50 hover:border-orange-600 hover:text-orange-600 transition-all duration-200"
                                 title="Editar Fila"
                               >
                                 <Edit3 className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => startFullEdit(objetivo)}
-                                variant="outline"
-                                className="h-10 w-10 p-0 rounded-xl border-2 border-orange-500 text-orange-500 hover:bg-orange-50 hover:border-orange-600 hover:text-orange-600 transition-all duration-200"
-                                title="Editar Todo"
-                              >
-                                <Pencil className="h-4 w-4" />
                               </Button>
                               <Button
                                 size="sm"
@@ -713,15 +701,6 @@ export default function AgregarObjetivoPage() {
                                 title="Ver Histórico"
                               >
                                 <History className="h-4 w-4" />
-                              </Button>
-                              <Button
-                                size="sm"
-                                onClick={() => handleDeleteClick(objetivo.id)}
-                                variant="outline"
-                                className="h-10 w-10 p-0 rounded-xl border-2 border-red-500 text-red-500 hover:bg-red-50 hover:border-red-600 hover:text-red-600 transition-all duration-200"
-                                title="Eliminar"
-                              >
-                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </>
                           )}
