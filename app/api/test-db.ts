@@ -1,40 +1,80 @@
-import sql from "mssql";
+import type { NextApiRequest, NextApiResponse } from "next";
+import { Connection, Request } from "tedious";
 
 // Fuerza runtime Node.js (no Edge)
-export const runtime = "nodejs";
+export const config = { runtime: "nodejs" };
 
-function connStr() {
+function getConfig() {
   const { DB_SERVER, DB_DATABASE, DB_USER, DB_PASSWORD, DB_PORT } = process.env;
   if (!DB_SERVER || !DB_DATABASE || !DB_USER || !DB_PASSWORD) {
     throw new Error("Variables de entorno de DB incompletas");
   }
-  const port = DB_PORT || "1433";
-  return `Server=${DB_SERVER},${port};Database=${DB_DATABASE};User Id=${DB_USER};Password=${DB_PASSWORD};Encrypt=true;TrustServerCertificate=false;`;
+  return {
+    server: DB_SERVER, // p.ej. gmas.database.windows.net
+    options: {
+      database: DB_DATABASE,
+      port: parseInt(DB_PORT || "1433", 10),
+      encrypt: true,                // 🔐 Requerido por Azure SQL
+      trustServerCertificate: false // 🔒 NO confiar en certs self-signed
+    },
+    authentication: {
+      type: "default",
+      options: {
+        userName: DB_USER,          // "mapm"
+        password: DB_PASSWORD       // "62762002Mp#"
+      }
+    }
+  };
 }
 
-export async function GET() {
+function runQuery<T = any>(sqlText: string): Promise<T[]> {
+  const connection = new Connection(getConfig());
+
+  return new Promise((resolve, reject) => {
+    const rows: any[] = [];
+
+    connection.on("connect", (err) => {
+      if (err) {
+        reject(err);
+        return;
+      }
+
+      const request = new Request(sqlText, (err) => {
+        if (err) reject(err);
+      });
+
+      request.on("row", (columns) => {
+        const obj: any = {};
+        for (const col of columns) obj[col.metadata.colName] = col.value;
+        rows.push(obj);
+      });
+
+      request.on("requestCompleted", () => {
+        connection.close();
+        resolve(rows);
+      });
+
+      connection.execSql(request);
+    });
+
+    connection.on("error", (err) => {
+      reject(err);
+    });
+
+    connection.connect();
+  });
+}
+
+export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    try { await sql.close(); } catch {}
-
-    const pool = await sql.connect({
-      connectionString: connStr(),
-      driver: "tedious",
-      options: { encrypt: true, trustServerCertificate: false },
-    });
-
-    const r = await pool.request().query("SELECT TOP 1 name FROM sys.tables");
-    await sql.close();
-
-    return new Response(JSON.stringify({ success: true, message: "Conexión exitosa", tables: r.recordset }), {
-      status: 200,
-      headers: { "content-type": "application/json" },
-    });
+    const rows = await runQuery("SELECT TOP 1 name FROM sys.tables");
+    res.status(200).json({ success: true, message: "Conexión exitosa", tables: rows });
   } catch (e: any) {
-    return new Response(JSON.stringify({
+    res.status(500).json({
       success: false,
       message: "Error de conexión",
       error: e?.message,
-      details: { code: e?.code, name: e?.name },
-    }), { status: 500, headers: { "content-type": "application/json" } });
+      details: { name: e?.name, code: e?.code }
+    });
   }
 }
