@@ -15,7 +15,10 @@ function getConfig() {
       database: DB_DATABASE,
       port: parseInt(DB_PORT || "1433", 10),
       encrypt: true,                // 🔐 Requerido por Azure SQL
-      trustServerCertificate: false // 🔒 NO confiar en certs self-signed
+      trustServerCertificate: false, // 🔒 NO confiar en certs self-signed
+      enableArithAbort: true,
+      connectionTimeout: 30000,
+      requestTimeout: 30000
     },
     authentication: {
       type: "default",
@@ -67,14 +70,45 @@ function runQuery<T = any>(sqlText: string): Promise<T[]> {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
+    // Debug: Mostrar configuración (sin credenciales)
+    const config = getConfig();
+    console.log("🔧 Configuración de conexión:", {
+      server: config.server,
+      database: config.options.database,
+      port: config.options.port,
+      encrypt: config.options.encrypt,
+      trustServerCertificate: config.options.trustServerCertificate
+    });
+
     const rows = await runQuery("SELECT TOP 1 name FROM sys.tables");
-    res.status(200).json({ success: true, message: "Conexión exitosa", tables: rows });
+    res.status(200).json({ 
+      success: true, 
+      message: "Conexión exitosa", 
+      tables: rows,
+      config: {
+        server: config.server,
+        database: config.options.database,
+        encrypt: config.options.encrypt
+      }
+    });
   } catch (e: any) {
+    console.error("❌ Error de conexión:", e);
     res.status(500).json({
       success: false,
       message: "Error de conexión",
       error: e?.message,
-      details: { name: e?.name, code: e?.code }
+      details: { 
+        name: e?.name, 
+        code: e?.code,
+        originalError: e?.originalError
+      },
+      debug: {
+        server: process.env.DB_SERVER,
+        database: process.env.DB_DATABASE,
+        port: process.env.DB_PORT,
+        hasUser: !!process.env.DB_USER,
+        hasPassword: !!process.env.DB_PASSWORD
+      }
     });
   }
 }
