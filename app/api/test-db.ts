@@ -9,45 +9,60 @@ function getConfig() {
   if (!DB_SERVER || !DB_DATABASE || !DB_USER || !DB_PASSWORD) {
     throw new Error("Variables de entorno de DB incompletas");
   }
+  
+  // Configuración específica para Azure SQL Database
   return {
-    server: DB_SERVER, // p.ej. gmas.database.windows.net
+    server: DB_SERVER,
     options: {
       database: DB_DATABASE,
       port: parseInt(DB_PORT || "1433", 10),
-      encrypt: true,                // 🔐 Requerido por Azure SQL
-      trustServerCertificate: false, // 🔒 NO confiar en certs self-signed
+      encrypt: true,                    // 🔐 OBLIGATORIO para Azure SQL
+      trustServerCertificate: false,    // 🔒 NO confiar en certs self-signed
       enableArithAbort: true,
       connectionTimeout: 30000,
       requestTimeout: 30000,
-      // Configuración específica para Azure SQL
+      // Configuración TLS específica para Azure
       cryptoCredentialsDetails: {
-        minVersion: 'TLSv1.2'
-      }
+        minVersion: 'TLSv1.2',
+        maxVersion: 'TLSv1.3'
+      },
+      // Configuración adicional para Azure SQL
+      useUTC: true,
+      abortTransactionOnError: true,
+      isolationLevel: 'READ_COMMITTED'
     },
     authentication: {
       type: "default",
       options: {
-        userName: DB_USER,          // "mapm"
-        password: DB_PASSWORD       // "62762002Mp#"
+        userName: DB_USER,
+        password: DB_PASSWORD
       }
     }
   };
 }
 
 function runQuery<T = any>(sqlText: string): Promise<T[]> {
-  const connection = new Connection(getConfig());
+  const config = getConfig();
+  console.log("🔧 Configuración completa:", JSON.stringify(config, null, 2));
+  
+  const connection = new Connection(config);
 
   return new Promise((resolve, reject) => {
     const rows: any[] = [];
 
     connection.on("connect", (err) => {
       if (err) {
+        console.error("❌ Error en connect:", err);
         reject(err);
         return;
       }
+      console.log("✅ Conexión establecida");
 
       const request = new Request(sqlText, (err) => {
-        if (err) reject(err);
+        if (err) {
+          console.error("❌ Error en request:", err);
+          reject(err);
+        }
       });
 
       request.on("row", (columns) => {
@@ -57,6 +72,7 @@ function runQuery<T = any>(sqlText: string): Promise<T[]> {
       });
 
       request.on("requestCompleted", () => {
+        console.log("✅ Query completada");
         connection.close();
         resolve(rows);
       });
@@ -65,9 +81,11 @@ function runQuery<T = any>(sqlText: string): Promise<T[]> {
     });
 
     connection.on("error", (err) => {
+      console.error("❌ Error de conexión:", err);
       reject(err);
     });
 
+    console.log("🔄 Intentando conectar...");
     connection.connect();
   });
 }
