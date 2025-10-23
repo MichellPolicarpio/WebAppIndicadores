@@ -18,7 +18,11 @@ function getConfig() {
       trustServerCertificate: false, // 🔒 NO confiar en certs self-signed
       enableArithAbort: true,
       connectionTimeout: 30000,
-      requestTimeout: 30000
+      requestTimeout: 30000,
+      // Configuración específica para Azure SQL
+      cryptoCredentialsDetails: {
+        minVersion: 'TLSv1.2'
+      }
     },
     authentication: {
       type: "default",
@@ -70,14 +74,16 @@ function runQuery<T = any>(sqlText: string): Promise<T[]> {
 
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
   try {
-    // Debug: Mostrar configuración (sin credenciales)
+    // Debug: Mostrar configuración completa (sin credenciales)
     const config = getConfig();
     console.log("🔧 Configuración de conexión:", {
       server: config.server,
       database: config.options.database,
       port: config.options.port,
       encrypt: config.options.encrypt,
-      trustServerCertificate: config.options.trustServerCertificate
+      trustServerCertificate: config.options.trustServerCertificate,
+      enableArithAbort: config.options.enableArithAbort,
+      cryptoCredentialsDetails: config.options.cryptoCredentialsDetails
     });
 
     const rows = await runQuery("SELECT TOP 1 name FROM sys.tables");
@@ -88,11 +94,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       config: {
         server: config.server,
         database: config.options.database,
-        encrypt: config.options.encrypt
+        encrypt: config.options.encrypt,
+        trustServerCertificate: config.options.trustServerCertificate
       }
     });
   } catch (e: any) {
     console.error("❌ Error de conexión:", e);
+    console.error("❌ Stack trace:", e.stack);
     res.status(500).json({
       success: false,
       message: "Error de conexión",
@@ -107,7 +115,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
         database: process.env.DB_DATABASE,
         port: process.env.DB_PORT,
         hasUser: !!process.env.DB_USER,
-        hasPassword: !!process.env.DB_PASSWORD
+        hasPassword: !!process.env.DB_PASSWORD,
+        config: {
+          encrypt: getConfig().options.encrypt,
+          trustServerCertificate: getConfig().options.trustServerCertificate
+        }
       }
     });
   }
