@@ -816,50 +816,56 @@ export default function AgregarObjetivoPage() {
           </DialogHeader>
           
           <div className="space-y-4">
-            {/* Selector de año */}
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Año para la Variable</Label>
-              <Select value={selectedYearForNewVariable} onValueChange={setSelectedYearForNewVariable}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecciona el año..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {generateAvailableYearsForNewVariable().map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      <span className="font-medium">{year}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-sm text-gray-500">
-                Solo se muestran años que no tienen variables registradas
-              </p>
+            {/* Selectores en línea */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Selector de año */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Año</Label>
+                <Select value={selectedYearForNewVariable} onValueChange={setSelectedYearForNewVariable}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Año..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {generateAvailableYearsForNewVariable().map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        <span className="font-medium">{year}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Selector de variable */}
+              <div className="space-y-2">
+                <Label className="text-sm font-medium">Variable</Label>
+                <Select value={newVariableName} onValueChange={(value) => {
+                  selectPreloadedVariable(value)
+                }}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Variable..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {variablesDisponibles.map((variable, index) => (
+                      <SelectItem key={index} value={variable}>
+                        <span className="font-medium">{variable}</span>
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            {/* Selector de variable */}
-            <div className="space-y-2">
-              <Label className="text-base font-medium">Seleccionar Variable</Label>
-              <Select value={newVariableName} onValueChange={(value) => {
-                selectPreloadedVariable(value)
-              }}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Selecciona una variable disponible..." />
-                </SelectTrigger>
-                <SelectContent className="max-h-60">
-                  {variablesDisponibles.map((variable, index) => (
-                    <SelectItem key={index} value={variable}>
-                      <span className="font-medium">{variable}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              {validationError && (
-                <div className="flex items-center gap-1 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
-                  {validationError}
-                </div>
-              )}
-            </div>
+            {/* Texto informativo */}
+            <p className="text-xs text-gray-500">
+              Solo se muestran años sin variables registradas
+            </p>
+
+            {validationError && (
+              <div className="flex items-center gap-1 text-sm text-red-600">
+                <AlertCircle className="h-4 w-4" />
+                {validationError}
+              </div>
+            )}
 
             {/* Valores mensuales - Grid simple */}
             <div className="space-y-3">
