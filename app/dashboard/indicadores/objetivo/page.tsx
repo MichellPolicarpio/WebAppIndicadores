@@ -74,6 +74,24 @@ export default function AgregarObjetivoPage() {
     return [currentYear - 2, currentYear - 1, currentYear]
   }
 
+  // Generar años disponibles para agregar variables (años sin variables registradas)
+  const generateAvailableYearsForNewVariable = () => {
+    const currentYear = new Date().getFullYear()
+    const allYears = [currentYear - 2, currentYear - 1, currentYear, currentYear + 1]
+    
+    // Obtener años que ya tienen variables registradas
+    const yearsWithVariables = new Set(
+      objetivos.map(obj => {
+        // Extraer año del periodo (formato: "Jul 2025")
+        const yearMatch = obj.periodo.match(/\d{4}/)
+        return yearMatch ? parseInt(yearMatch[0]) : null
+      }).filter(year => year !== null)
+    )
+    
+    // Retornar solo años que NO tienen variables
+    return allYears.filter(year => !yearsWithVariables.has(year))
+  }
+
   const generateMonths = () => {
     return ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"]
   }
@@ -246,6 +264,7 @@ export default function AgregarObjetivoPage() {
   const [newVariableName, setNewVariableName] = useState("")
   const [newVariableValues, setNewVariableValues] = useState<{[mes: string]: {valor: string, observaciones: string}}>({})
   const [isAddingVariable, setIsAddingVariable] = useState(false)
+  const [selectedYearForNewVariable, setSelectedYearForNewVariable] = useState(currentDate.year.toString())
   
   // Estado para edición híbrida
   const [editingVariable, setEditingVariable] = useState<Objetivo | null>(null)
@@ -333,6 +352,7 @@ export default function AgregarObjetivoPage() {
   const handleAddNew = () => {
     setNewVariableName("")
     setNewVariableValues({})
+    setSelectedYearForNewVariable(currentDate.year.toString())
     setAddVariableDialogOpen(true)
   }
 
@@ -344,7 +364,7 @@ export default function AgregarObjetivoPage() {
 
     setIsAddingVariable(true)
     try {
-      // Crear la nueva variable con valores mensuales
+      // Crear la nueva variable con valores mensuales para el año seleccionado
       const newVariable: Objetivo = {
         id: Date.now().toString(),
         nombre: newVariableName,
@@ -353,7 +373,7 @@ export default function AgregarObjetivoPage() {
           acc[mes] = newVariableValues[mes].valor || "-"
           return acc
         }, {} as {[mes: string]: string}),
-        periodo: `${getMonthName(currentDate.month)} ${currentDate.year}`,
+        periodo: `${getMonthName(currentDate.month)} ${selectedYearForNewVariable}`, // Usar el año seleccionado
         progreso: 0,
       }
 
@@ -361,6 +381,7 @@ export default function AgregarObjetivoPage() {
       setAddVariableDialogOpen(false)
       setNewVariableName("")
       setNewVariableValues({})
+      setSelectedYearForNewVariable(currentDate.year.toString())
       setValidationError("")
     } catch (error) {
       console.error("Error agregando variable:", error)
@@ -373,6 +394,7 @@ export default function AgregarObjetivoPage() {
     setAddVariableDialogOpen(false)
     setNewVariableName("")
     setNewVariableValues({})
+    setSelectedYearForNewVariable(currentDate.year.toString())
     setValidationError("")
   }
 
@@ -389,6 +411,7 @@ export default function AgregarObjetivoPage() {
   // Validar si todos los campos están llenos
   const isFormValid = () => {
     if (!newVariableName.trim()) return false
+    if (!selectedYearForNewVariable) return false
     
     const months = generateMonths()
     return months.every(mes => {
@@ -793,23 +816,43 @@ export default function AgregarObjetivoPage() {
           </DialogHeader>
           
           <div className="space-y-4">
+            {/* Selector de año */}
+            <div className="space-y-2">
+              <Label className="text-base font-medium">Año para la Variable</Label>
+              <Select value={selectedYearForNewVariable} onValueChange={setSelectedYearForNewVariable}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona el año..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {generateAvailableYearsForNewVariable().map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      <span className="font-medium">{year}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-sm text-gray-500">
+                Solo se muestran años que no tienen variables registradas
+              </p>
+            </div>
+
             {/* Selector de variable */}
-                  <div className="space-y-2">
-                    <Label className="text-base font-medium">Seleccionar Variable</Label>
-                    <Select value={newVariableName} onValueChange={(value) => {
-                      selectPreloadedVariable(value)
-                    }}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Selecciona una variable disponible..." />
-                      </SelectTrigger>
-                      <SelectContent className="max-h-60">
-                        {variablesDisponibles.map((variable, index) => (
-                          <SelectItem key={index} value={variable}>
-                            <span className="font-medium">{variable}</span>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+            <div className="space-y-2">
+              <Label className="text-base font-medium">Seleccionar Variable</Label>
+              <Select value={newVariableName} onValueChange={(value) => {
+                selectPreloadedVariable(value)
+              }}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Selecciona una variable disponible..." />
+                </SelectTrigger>
+                <SelectContent className="max-h-60">
+                  {variablesDisponibles.map((variable, index) => (
+                    <SelectItem key={index} value={variable}>
+                      <span className="font-medium">{variable}</span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               {validationError && (
                 <div className="flex items-center gap-1 text-sm text-red-600">
                   <AlertCircle className="h-4 w-4" />
