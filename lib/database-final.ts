@@ -10,8 +10,8 @@ const dbConfig = {
   database: 'control_activos',
   options: {
     trustedConnection: true,
-    encrypt: false,
-    trustServerCertificate: true,
+    encrypt: true,                    // 🔐 OBLIGATORIO para Azure SQL
+    trustServerCertificate: false,    // 🔒 NO confiar en certs self-signed
     enableArithAbort: true,
   }
 }
@@ -23,8 +23,8 @@ const dbConfigAlt = {
   user: 'sa',
   password: 'Passw0rd!',
   options: {
-    encrypt: false,
-    trustServerCertificate: true,
+    encrypt: true,                    // 🔐 OBLIGATORIO para Azure SQL
+    trustServerCertificate: false,    // 🔒 NO confiar en certs self-signed
     enableArithAbort: true,
   }
 }

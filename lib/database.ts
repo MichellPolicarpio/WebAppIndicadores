@@ -16,9 +16,18 @@ const dbConfig: any = {
   password: env.database.password,
   port: env.database.port,
   options: {
-    encrypt: false,
-    trustServerCertificate: true,
+    encrypt: true,                    // 🔐 OBLIGATORIO para Azure SQL
+    trustServerCertificate: false,    // 🔒 NO confiar en certs self-signed
     enableArithAbort: true,
+    // Configuración TLS específica para Azure
+    cryptoCredentialsDetails: {
+      minVersion: 'TLSv1.2',
+      maxVersion: 'TLSv1.3'
+    },
+    // Configuración adicional para Azure SQL
+    useUTC: true,
+    abortTransactionOnError: true,
+    isolationLevel: 'READ_COMMITTED'
   },
   pool: {
     max: 10,
