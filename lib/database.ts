@@ -27,7 +27,7 @@ const dbConfig: any = {
     // Configuración adicional para Azure SQL
     useUTC: true,
     abortTransactionOnError: true,
-    isolationLevel: 'READ_COMMITTED'
+    isolationLevel: 2  // READ_COMMITTED = 2
   },
   pool: {
     max: 10,
