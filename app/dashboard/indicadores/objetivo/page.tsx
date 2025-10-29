@@ -306,29 +306,49 @@ export default function AgregarObjetivoPage() {
       return
     }
 
+    // Validar que todos los campos sean válidos
+    if (!isFormValid()) {
+      setValidationError("Por favor completa todos los meses con valores válidos")
+      return
+    }
+
     setIsAddingVariable(true)
+    setValidationError("")
+    
     try {
-      // Crear la nueva variable con valores mensuales para el año seleccionado
-      const newVariable: Objetivo = {
-        id: Date.now().toString(),
-        nombre: newVariableName,
-        valorObjetivo: "100%", // Valor objetivo por defecto
-        valoresMensuales: Object.keys(newVariableValues).reduce((acc, mes) => {
-          acc[mes] = newVariableValues[mes].valor || "-"
-          return acc
-        }, {} as {[mes: string]: string}),
-        periodo: `${getMonthName(currentDate.month)} ${selectedYearForNewVariable}`, // Usar el año seleccionado
-        progreso: 0,
+      // Llamar al API para guardar en la base de datos
+      const response = await fetch('/api/objetivos', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          nombreVariable: newVariableName,
+          year: parseInt(selectedYearForNewVariable),
+          valoresMensuales: newVariableValues
+        })
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Error al guardar objetivos')
       }
 
-      setObjetivos([...objetivos, newVariable])
+      console.log('✅ Objetivos guardados:', result)
+
+      // Cerrar modal y limpiar
       setAddVariableDialogOpen(false)
       setNewVariableName("")
       setNewVariableValues({})
       setSelectedYearForNewVariable(currentDate.year.toString())
-      setValidationError("")
-    } catch (error) {
-      console.error("Error agregando variable:", error)
+      
+      // Recargar objetivos desde la BD
+      await fetchObjetivos(selectedYearForAnnual)
+
+    } catch (error: any) {
+      console.error("❌ Error guardando objetivos:", error)
+      setValidationError(error.message || "Error al guardar los objetivos. Intenta de nuevo.")
     } finally {
       setIsAddingVariable(false)
     }
@@ -342,17 +362,75 @@ export default function AgregarObjetivoPage() {
     setValidationError("")
   }
 
+  // Instrucciones dinámicas solo para variables específicas
+  const getVariableInstructions = (variableName: string) => {
+    const instrucciones: { [key: string]: { descripcion: string } } = {
+      "Número de clientes": {
+        descripcion: "Ingresa el número total de clientes. Solo números enteros sin decimales."
+      },
+      "Facturación total sin IVA (mdp)": {
+        descripcion: "Ingresa la facturación en millones de pesos. Usa punto (.) como decimal."
+      },
+      "Recaudación (mdp)": {
+        descripcion: "Ingresa la recaudación en millones de pesos. Usa punto (.) como decimal."
+      }
+    }
+
+    // Solo devolver si está en el catálogo, sino null
+    return instrucciones[variableName] || null
+  }
+
+  // Función para normalizar y validar números ingresados
+  const normalizeNumberInput = (value: string): string => {
+    if (!value || value.trim() === '') return ''
+    
+    // Paso 1: Eliminar espacios
+    let cleaned = value.replace(/\s/g, '')
+    
+    // Paso 2: Reemplazar comas por puntos (formato decimal europeo)
+    cleaned = cleaned.replace(/,/g, '.')
+    
+    // Paso 3: Eliminar todo excepto números, punto y signo negativo
+    cleaned = cleaned.replace(/[^\d.-]/g, '')
+    
+    // Paso 4: Asegurar solo un punto decimal
+    const parts = cleaned.split('.')
+    if (parts.length > 2) {
+      cleaned = parts[0] + '.' + parts.slice(1).join('')
+    }
+    
+    // Paso 5: Permitir solo un signo negativo al inicio
+    const negativeMatch = cleaned.match(/^-/)
+    cleaned = cleaned.replace(/-/g, '')
+    if (negativeMatch) {
+      cleaned = '-' + cleaned
+    }
+    
+    return cleaned
+  }
+
+  // Función para validar si un valor es un número válido
+  const isValidNumber = (value: string): boolean => {
+    if (!value || value.trim() === '') return true // Vacío es válido (no obligatorio)
+    if (value === '-' || value === '.') return false // Incompletos
+    const num = parseFloat(value)
+    return !isNaN(num) && isFinite(num)
+  }
+
   const updateVariableValue = (mes: string, field: 'valor' | 'observaciones', value: string) => {
+    // Si es el campo 'valor', normalizar el input
+    const finalValue = field === 'valor' ? normalizeNumberInput(value) : value
+    
     setNewVariableValues(prev => ({
       ...prev,
       [mes]: {
         ...prev[mes],
-        [field]: value
+        [field]: finalValue
       }
     }))
   }
 
-  // Validar si todos los campos están llenos
+  // Validar si todos los campos están llenos y son válidos
   const isFormValid = () => {
     if (!newVariableName.trim()) return false
     if (!selectedYearForNewVariable) return false
@@ -360,7 +438,9 @@ export default function AgregarObjetivoPage() {
     const months = generateMonths()
     return months.every(mes => {
       const monthData = newVariableValues[mes]
-      return monthData && monthData.valor && monthData.valor.trim() !== ""
+      // Verificar que existe, tiene valor, y el valor es un número válido
+      if (!monthData || !monthData.valor || monthData.valor.trim() === "") return false
+      return isValidNumber(monthData.valor)
     })
   }
 
@@ -967,29 +1047,55 @@ export default function AgregarObjetivoPage() {
 
                 {/* Valores mensuales - Grid simple */}
                 <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-medium text-gray-900">Valores Mensuales</h3>
-                <div className="text-sm text-gray-500">
-                  {(() => {
-                    const months = generateMonths()
-                    const filledMonths = months.filter(mes => {
-                      const monthData = newVariableValues[mes]
-                      return monthData && monthData.valor && monthData.valor.trim() !== ""
-                    }).length
-                    return `${filledMonths}/${months.length} meses completados`
-                  })()}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-medium text-gray-900">Valores Mensuales</h3>
+                  <div className="text-sm text-gray-500">
+                    {(() => {
+                      const months = generateMonths()
+                      const filledMonths = months.filter(mes => {
+                        const monthData = newVariableValues[mes]
+                        return monthData && monthData.valor && monthData.valor.trim() !== ""
+                      }).length
+                      return `${filledMonths}/${months.length} meses completados`
+                    })()}
+                  </div>
                 </div>
+                {newVariableName && getVariableInstructions(newVariableName) && (
+                  <div className="flex items-start gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
+                    <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <div className="text-xs text-blue-700">
+                      <strong>{newVariableName}:</strong> {getVariableInstructions(newVariableName)?.descripcion}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto border rounded-lg p-3">
-                {generateMonths().map((mes) => (
+                {generateMonths().map((mes) => {
+                  const valorActual = newVariableValues[mes]?.valor || ""
+                  const esValorValido = isValidNumber(valorActual)
+                  
+                  return (
                   <div key={mes} className="space-y-2 p-3 border rounded-lg bg-gray-50">
                     <div className="text-sm font-medium text-gray-700">{mes}</div>
-                    <Input
-                      value={newVariableValues[mes]?.valor || ""}
-                      onChange={(e) => updateVariableValue(mes, 'valor', e.target.value)}
-                      placeholder="Valor"
-                      className="text-sm"
-                    />
+                    <div className="relative">
+                      <Input
+                        value={valorActual}
+                        onChange={(e) => updateVariableValue(mes, 'valor', e.target.value)}
+                        placeholder="0.00"
+                        className={`text-sm ${
+                          valorActual && !esValorValido 
+                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
+                            : ''
+                        }`}
+                        title={valorActual && !esValorValido ? 'Formato numérico inválido' : ''}
+                      />
+                      {valorActual && !esValorValido && (
+                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                          <AlertCircle className="h-4 w-4 text-red-500" />
+                        </div>
+                      )}
+                    </div>
                     <Input
                       value={newVariableValues[mes]?.observaciones || ""}
                       onChange={(e) => updateVariableValue(mes, 'observaciones', e.target.value)}
@@ -997,7 +1103,8 @@ export default function AgregarObjetivoPage() {
                       className="text-sm"
                     />
                   </div>
-                ))}
+                  )
+                })}
               </div>
                 </div>
               </>

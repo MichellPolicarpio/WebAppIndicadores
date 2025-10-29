@@ -150,3 +150,108 @@ export async function GET(req: NextRequest) {
   }
 }
 
+// POST: Crear objetivos anuales para una variable
+export async function POST(req: NextRequest) {
+  try {
+    // Validar autenticación
+    const cookieStore = await cookies()
+    const userCookie = cookieStore.get('user')
+    
+    if (!userCookie?.value) {
+      return NextResponse.json({ success: false, message: 'Usuario no autenticado' }, { status: 401 })
+    }
+
+    const user = JSON.parse(userCookie.value)
+    if (!user || !user.idEmpresa_Gerencia) {
+      return NextResponse.json({ success: false, message: 'Usuario sin empresa asignada' }, { status: 401 })
+    }
+
+    const empresaGerencia = user.idEmpresa_Gerencia
+    const body = await req.json()
+    const { nombreVariable, year, valoresMensuales } = body
+
+    // Validar datos requeridos
+    if (!nombreVariable || !year || !valoresMensuales) {
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Faltan datos requeridos: nombreVariable, year, valoresMensuales' 
+      }, { status: 400 })
+    }
+
+    console.log('📝 Creando objetivos para:', { nombreVariable, year, empresa: empresaGerencia })
+
+    // Paso 1: Obtener id_Variable_Empresa_Gerencia
+    const getVegQuery = `
+      SELECT veg.id_Variable_Empresa_Gerencia
+      FROM INDICADORES.VARIABLE_EMPRESA_GERENCIA AS veg
+      INNER JOIN INDICADORES.VARIABLES AS v
+          ON v.id_Variable = veg.id_Variable
+      INNER JOIN INDICADORES.EMPRESA_GERENCIA AS eg
+          ON eg.id_Empresa_Gerencia = veg.id_Empresa_Gerencia
+      WHERE v.nombreVariable = @nombreVariable
+        AND eg.id_Empresa_Gerencia = @empresaGerencia
+    `
+    
+    const vegResult = await executeQuery(getVegQuery, { nombreVariable, empresaGerencia })
+    
+    if (!vegResult || vegResult.length === 0) {
+      return NextResponse.json({ 
+        success: false, 
+        message: `No se encontró la variable "${nombreVariable}" para esta empresa` 
+      }, { status: 404 })
+    }
+
+    const idVariableEmpresaGerencia = vegResult[0].id_Variable_Empresa_Gerencia
+
+    // Paso 2: Insertar objetivos para cada mes
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    
+    let insertedCount = 0
+
+    for (let i = 0; i < meses.length; i++) {
+      const mes = meses[i]
+      const valorData = valoresMensuales[mes]
+      
+      if (valorData && valorData.valor && valorData.valor.trim() !== '' && valorData.valor !== '-') {
+        const periodo = `${year}-${String(i + 1).padStart(2, '0')}-01`
+        const valor = parseFloat(valorData.valor)
+        const observaciones = valorData.observaciones || null
+
+        const insertQuery = `
+          INSERT INTO INDICADORES.OBJETIVOS_VARIABLES_HECHOS
+          (id_Variable_Empresa_Gerencia, periodo, valorObjetivo, observaciones_objetivo, fecha_Creacion, creado_Por)
+          VALUES
+          (@idVariableEmpresaGerencia, @periodo, @valor, @observaciones, GETDATE(), @creadoPor)
+        `
+
+        await executeQuery(insertQuery, {
+          idVariableEmpresaGerencia,
+          periodo,
+          valor,
+          observaciones,
+          creadoPor: user.usuario || user.email || 'Sistema'
+        })
+
+        insertedCount++
+      }
+    }
+
+    console.log(`✅ ${insertedCount} objetivos creados para ${nombreVariable} - ${year}`)
+
+    return NextResponse.json({ 
+      success: true, 
+      message: `${insertedCount} objetivos creados exitosamente`,
+      insertedCount
+    })
+
+  } catch (error: any) {
+    console.error('❌ Error creando objetivos:', error)
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Error creando objetivos', 
+      error: error.message || String(error)
+    }, { status: 500 })
+  }
+}
+
