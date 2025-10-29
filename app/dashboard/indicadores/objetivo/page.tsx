@@ -681,7 +681,7 @@ export default function AgregarObjetivoPage() {
               
               <Button onClick={handleAddNew} className="bg-blue-600 hover:bg-blue-700 w-full sm:w-auto text-xs sm:text-sm">
                 <Plus className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Agregar Objetivo</span>
+                <span className="hidden sm:inline">Agregar Objetivos Anuales</span>
                 <span className="sm:hidden">Agregar</span>
               </Button>
             </div>
@@ -807,7 +807,7 @@ export default function AgregarObjetivoPage() {
                             className="mt-2 bg-blue-600 hover:bg-blue-700"
                           >
                             <Plus className="h-4 w-4 mr-2" />
-                            Agregar Primer Objetivo
+                            Agregar Objetivos Anuales
                           </Button>
                         </div>
                       </td>
