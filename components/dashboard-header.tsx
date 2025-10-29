@@ -106,7 +106,6 @@ function getHelpContent(pageTitle?: string) {
             <ul className="text-blue-700 text-sm space-y-1">
               <li>• <strong>Indicadores Mensuales:</strong> Variables operativas por período</li>
               <li>• <strong>Objetivos:</strong> Metas estratégicas con seguimiento</li>
-              <li>• <strong>Navegación:</strong> Usa los botones para acceder a cada sección</li>
             </ul>
           </div>
         </div>
