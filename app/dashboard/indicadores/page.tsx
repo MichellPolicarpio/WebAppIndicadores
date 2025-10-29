@@ -23,7 +23,7 @@ export default function IndicadoresPage() {
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Agregar Indicador</h2>
                 <p className="text-gray-600 text-sm sm:text-base">
-                  Registra y gestiona indicadores mensuales como número de acometidas, clientes, facturación y más.
+                  Registra indicadores mensuales como número de acometidas, clientes, facturación y más.
                 </p>
                 <Button className="mt-4 bg-sky-600 hover:bg-sky-700 text-white w-full sm:w-auto">Ir a Indicadores</Button>
               </div>
@@ -39,7 +39,7 @@ export default function IndicadoresPage() {
                 </div>
                 <h2 className="text-xl sm:text-2xl font-bold text-gray-900">Agregar Objetivo</h2>
                 <p className="text-gray-600 text-sm sm:text-base">
-                  Define y monitorea objetivos estratégicos con metas, progreso y seguimiento de cumplimiento.
+                  Ingresa objetivos anuales de ciertos indicadores segun cálculos establecidos.
                 </p>
                 <Button className="mt-4 bg-sky-600 hover:bg-sky-700 text-white w-full sm:w-auto">Ir a Objetivos</Button>
               </div>
