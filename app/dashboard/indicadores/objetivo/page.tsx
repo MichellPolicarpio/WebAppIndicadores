@@ -525,34 +525,6 @@ export default function AgregarObjetivoPage() {
                   Seleccionar Período
                 </h2>
               </div>
-              <div className="flex items-center gap-2">
-                <label className="text-xs font-semibold text-gray-700">Año:</label>
-                <Select 
-                  value={selectedYearForAnnual.toString()} 
-                  onValueChange={(value) => selectYearForAnnual(parseInt(value))}
-                >
-                  <SelectTrigger className="w-24 h-8 text-xs border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    {allYears.map((year) => {
-                      const hasData = yearsWithData.includes(year)
-                      return (
-                        <SelectItem 
-                          key={year} 
-                          value={year.toString()} 
-                          className={`text-xs ${hasData ? 'text-gray-900' : 'text-gray-500 italic'}`}
-                        >
-                          <div className="flex items-center gap-2">
-                            {year}
-                            {!hasData && <span className="text-[10px] text-orange-500">(Vacío)</span>}
-                          </div>
-                        </SelectItem>
-                      )
-                    })}
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
             
             {/* Navegación de años */}
@@ -627,7 +599,7 @@ export default function AgregarObjetivoPage() {
             {/* Información del período seleccionado */}
             <div className="mt-2 pt-2 border-t border-gray-200">
               <div className="flex flex-col items-center gap-2">
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+                <div className="flex items-center justify-center">
                   <div className={`flex items-center gap-1.5 border px-3 py-1 rounded-lg shadow-sm ${
                     yearsWithData.includes(selectedYearForAnnual)
                       ? 'bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200'
@@ -641,11 +613,6 @@ export default function AgregarObjetivoPage() {
                           <span className="ml-1 text-[10px] text-orange-600">(Vacío)</span>
                         )}
                       </div>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1.5 bg-gradient-to-r from-gray-50 to-gray-100 border border-gray-200 px-3 py-1 rounded-lg shadow-sm">
-                    <div className="text-xs text-gray-600">
-                      Rango: <span className="font-bold text-gray-800">{getVisibleYears()[0]} - {getVisibleYears()[getVisibleYears().length - 1]}</span>
                     </div>
                   </div>
                 </div>
@@ -675,8 +642,11 @@ export default function AgregarObjetivoPage() {
         <CardHeader className="border-b border-gray-200 bg-white">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
             <div>
-              <CardTitle className="text-xl sm:text-2xl text-gray-900">
-                Objetivos: {objetivos.length}/20
+              <CardTitle className="text-xl sm:text-2xl text-gray-900 flex items-center gap-2">
+                <span>Objetivos</span>
+                <span className="text-base font-normal text-gray-500">
+                  ({objetivos.length} {objetivos.length === 1 ? 'registro' : 'registros'})
+                </span>
               </CardTitle>
             </div>
             <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full lg:w-auto">
@@ -694,23 +664,6 @@ export default function AgregarObjetivoPage() {
                               ))}
                             </SelectContent>
                           </Select>
-                          <Select value={selectedYear} onValueChange={setSelectedYear}>
-                            <SelectTrigger className="w-20 sm:w-24 bg-white border-gray-300 text-gray-700 text-xs sm:text-sm hover:border-blue-400 focus:border-blue-500">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-white border-gray-300">
-                              {years.map((year) => (
-                                <SelectItem key={year} value={year.toString()} className="text-gray-700 focus:bg-blue-50 text-xs sm:text-sm">
-                                  {year}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-              )}
-              
-              {viewType === "anual" && (
-                        <div className="flex gap-2">
                           <Select value={selectedYear} onValueChange={setSelectedYear}>
                             <SelectTrigger className="w-20 sm:w-24 bg-white border-gray-300 text-gray-700 text-xs sm:text-sm hover:border-blue-400 focus:border-blue-500">
                               <SelectValue />
