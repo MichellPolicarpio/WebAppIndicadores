@@ -5,7 +5,7 @@ import { cookies } from 'next/headers'
 export async function GET(req: NextRequest) {
   try {
     // Obtener usuario desde cookies del servidor
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const userCookie = cookieStore.get('user')
     
     if (!userCookie?.value) {

@@ -10,7 +10,7 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const userCookie = cookieStore.get('user')
     
     if (!userCookie?.value) {
@@ -44,7 +44,7 @@ export async function PUT(
   { params }: { params: { id: string } }
 ) {
   try {
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const userCookie = cookieStore.get('user')
     
     if (!userCookie?.value) {

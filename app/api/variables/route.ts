@@ -7,7 +7,7 @@ import { cookies } from 'next/headers'
 export async function GET(req: NextRequest) {
   try {
     // Validar autenticación desde cookies
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const userCookie = cookieStore.get('user')
     
     if (!userCookie?.value) {
@@ -147,7 +147,7 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     // Validar autenticación desde cookies
-    const cookieStore = cookies()
+    const cookieStore = await cookies()
     const userCookie = cookieStore.get('user')
     
     if (!userCookie?.value) {
