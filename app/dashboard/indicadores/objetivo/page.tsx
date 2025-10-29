@@ -621,11 +621,7 @@ export default function AgregarObjetivoPage() {
                 <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] text-gray-500">
                   <div className="flex items-center gap-1">
                     <div className="w-3 h-3 bg-gradient-to-r from-blue-600 to-blue-500 rounded"></div>
-                    <span>Con datos</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="w-3 h-3 bg-gray-100 rounded opacity-60 border border-gray-300"></div>
-                    <span>Sin datos (Apagado)</span>
+                    <span>Año Seleccionado</span>
                   </div>
                   <div className="flex items-center gap-1">
                     <div className="w-2 h-2 bg-red-400 rounded-full"></div>
