@@ -204,17 +204,22 @@ export async function POST(req: NextRequest) {
     // Paso 2: Insertar objetivos para cada mes
     const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
                    'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre']
+    const mesesAbrev = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic']
     
     let insertedCount = 0
 
     for (let i = 0; i < meses.length; i++) {
-      const mes = meses[i]
-      const valorData = valoresMensuales[mes]
+      const mesLargo = meses[i]
+      const mesAbrev = mesesAbrev[i]
+      // Tomar el valor desde el nombre largo o abreviado
+      const valorDataRaw = valoresMensuales[mesLargo] ?? valoresMensuales[mesAbrev]
       
-      if (valorData && valorData.valor && valorData.valor.trim() !== '' && valorData.valor !== '-') {
+      if (valorDataRaw && valorDataRaw.valor && valorDataRaw.valor.toString().trim() !== '' && valorDataRaw.valor !== '-') {
         const periodo = `${year}-${String(i + 1).padStart(2, '0')}-01`
-        const valor = parseFloat(valorData.valor)
-        const observaciones = valorData.observaciones || null
+        // Limpiar comas en caso de que vengan en el valor
+        const valorLimpio = valorDataRaw.valor.toString().replace(/,/g, '')
+        const valor = parseFloat(valorLimpio)
+        const observaciones = valorDataRaw.observaciones || null
 
         const insertQuery = `
           INSERT INTO INDICADORES.OBJETIVOS_VARIABLES_HECHOS
@@ -310,6 +315,41 @@ export async function PUT(req: NextRequest) {
       success: false,
       message: 'Error editando objetivo',
       error: error.message || String(error)
+    }, { status: 500 })
+  }
+}
+
+export async function DELETE(req: NextRequest) {
+  try {
+    const cookieStore = await cookies()
+    const userCookie = cookieStore.get('user')
+    if (!userCookie?.value) {
+      return NextResponse.json({ success: false, message: 'Usuario no autenticado' }, { status: 401 })
+    }
+    const user = JSON.parse(userCookie.value)
+    if (!user || !user.idEmpresa_Gerencia) {
+      return NextResponse.json({ success: false, message: 'Usuario sin empresa asignada' }, { status: 401 })
+    }
+    const body = await req.json()
+    const { idVariableEmpresaGerencia, year } = body
+    if (!idVariableEmpresaGerencia || !year) {
+      return NextResponse.json({ success: false, message: 'Faltan parámetros de eliminación' }, { status: 400 })
+    }
+
+    // Eliminar todos los objetivos de ese id para ese año
+    const deleteQuery = `
+      DELETE FROM INDICADORES.OBJETIVOS_VARIABLES_HECHOS
+      WHERE id_Variable_Empresa_Gerencia = @idVariableEmpresaGerencia
+        AND YEAR(periodo) = @year
+    `
+    await executeQuery(deleteQuery, { idVariableEmpresaGerencia, year })
+    return NextResponse.json({ success: true, message: 'Objetivo anual eliminado correctamente' })
+  } catch (error: any) {
+    console.error('❌ Error eliminando objetivo anual:', error)
+    return NextResponse.json({
+      success: false,
+      message: 'Error eliminando objetivo anual',
+      error: String(error)
     }, { status: 500 })
   }
 }

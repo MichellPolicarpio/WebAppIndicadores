@@ -27,6 +27,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { toast } from "sonner"
 
 interface Objetivo {
   id: string
@@ -176,7 +177,36 @@ export default function AgregarObjetivoPage() {
   const [newVariableValues, setNewVariableValues] = useState<{[mes: string]: {valor: string, observaciones: string}}>({})
   const [isAddingVariable, setIsAddingVariable] = useState(false)
   const [selectedYearForNewVariable, setSelectedYearForNewVariable] = useState(currentDate.year.toString())
-  
+  // Variables ya registradas para el año seleccionado en el modal
+  const [existingVariablesForYear, setExistingVariablesForYear] = useState<Set<string>>(new Set())
+  const [loadingExistingForYear, setLoadingExistingForYear] = useState(false)
+
+  // Cargar variables existentes para el año seleccionado en el modal (sin afectar la tabla principal)
+  const fetchExistingVariablesForYear = useCallback(async (yearStr: string) => {
+    try {
+      setLoadingExistingForYear(true)
+      const response = await fetch(`/api/objetivos?year=${parseInt(yearStr, 10)}`)
+      const result = await response.json()
+      if (result.success) {
+        const names = new Set<string>((result.data || []).map((v: any) => v.nombre))
+        setExistingVariablesForYear(names)
+      } else {
+        setExistingVariablesForYear(new Set())
+      }
+    } catch (e) {
+      setExistingVariablesForYear(new Set())
+    } finally {
+      setLoadingExistingForYear(false)
+    }
+  }, [])
+
+  // Cuando se abre el modal o cambia el año del modal, cargar existentes
+  useEffect(() => {
+    if (addVariableDialogOpen && selectedYearForNewVariable) {
+      fetchExistingVariablesForYear(selectedYearForNewVariable)
+    }
+  }, [addVariableDialogOpen, selectedYearForNewVariable, fetchExistingVariablesForYear])
+
   // Estado para edición híbrida
   const [editingVariable, setEditingVariable] = useState<Objetivo | null>(null)
   const [editVariableDialogOpen, setEditVariableDialogOpen] = useState(false)
@@ -299,7 +329,6 @@ export default function AgregarObjetivoPage() {
       setValidationError("El nombre de la variable es requerido")
       return
     }
-
     // Validar que todos los campos sean válidos
     if (!isFormValid()) {
       setValidationError("Por favor completa todos los meses con valores válidos")
@@ -308,7 +337,16 @@ export default function AgregarObjetivoPage() {
 
     setIsAddingVariable(true)
     setValidationError("")
-    
+
+    // Limpiar comas de los valores antes de guardar
+    const valoresMensSinComa: typeof newVariableValues = {}
+    Object.keys(newVariableValues).forEach((mes) => {
+      valoresMensSinComa[mes] = {
+        valor: newVariableValues[mes]?.valor ? newVariableValues[mes].valor.replace(/,/g, '') : '',
+        observaciones: newVariableValues[mes]?.observaciones || ''
+      }
+    })
+
     try {
       // Llamar al API para guardar en la base de datos
       const response = await fetch('/api/objetivos', {
@@ -319,27 +357,18 @@ export default function AgregarObjetivoPage() {
         body: JSON.stringify({
           nombreVariable: newVariableName,
           year: parseInt(selectedYearForNewVariable),
-          valoresMensuales: newVariableValues
+          valoresMensuales: valoresMensSinComa
         })
       })
-
       const result = await response.json()
-
       if (!response.ok || !result.success) {
         throw new Error(result.message || 'Error al guardar objetivos')
       }
-
-      console.log('✅ Objetivos guardados:', result)
-
-      // Cerrar modal y limpiar
       setAddVariableDialogOpen(false)
       setNewVariableName("")
       setNewVariableValues({})
       setSelectedYearForNewVariable(currentDate.year.toString())
-      
-      // Recargar objetivos desde la BD
       await fetchObjetivos(selectedYearForAnnual)
-
     } catch (error: any) {
       console.error("❌ Error guardando objetivos:", error)
       setValidationError(error.message || "Error al guardar los objetivos. Intenta de nuevo.")
@@ -600,6 +629,27 @@ export default function AgregarObjetivoPage() {
       ...prev,
       [mes]: value
     }))
+  }
+
+  // Eliminar variable anual (todos sus meses para ese año)
+  const handleDeleteObjetivo = async (idVariableEmpresaGerencia: string, year: number, nombreVariable: string) => {
+    const ok = window.confirm(`¿Eliminar todos los objetivos anuales de "${nombreVariable}" para ${year}?`)
+    if (!ok) return
+    try {
+      const response = await fetch('/api/objetivos', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ idVariableEmpresaGerencia, year })
+      })
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || "No se pudo eliminar")
+      }
+      toast.success('Objetivo anual eliminado')
+      await fetchObjetivos(selectedYearForAnnual)
+    } catch (e: any) {
+      toast.error(e.message || "Error eliminando objetivo")
+    }
   }
 
   return (
@@ -895,7 +945,7 @@ export default function AgregarObjetivoPage() {
                         {mes}
                       </th>
                     ))}
-                    <th className="text-center px-3 xl:px-6 py-3 text-xs font-semibold text-gray-700 sticky right-0 bg-gray-50 z-10 min-w-[120px] xl:min-w-[180px]">
+                    <th className="text-center px-3 xl:px-6 py-3 text-xs font-semibold text-gray-700 sticky right-0 bg-gray-50 z-10 min-w-[60px] xl:min-w-[100px]">
                       Acciones
                     </th>
                   </tr>
@@ -998,6 +1048,15 @@ export default function AgregarObjetivoPage() {
                               >
                                 <History className="h-4 w-4" />
                               </Button>
+                              <Button
+                                size="sm"
+                                onClick={() => handleDeleteObjetivo(objetivo.id, selectedYearForAnnual, objetivo.nombre)}
+                                variant="outline"
+                                className="h-10 w-10 p-0 rounded-xl border-2 border-red-500 text-red-500 hover:bg-red-50 hover:border-red-600 hover:text-red-600 transition-all duration-200"
+                                title="Eliminar variable anual"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
                             </>
                           )}
                         </div>
@@ -1026,69 +1085,63 @@ export default function AgregarObjetivoPage() {
           </DialogHeader>
           
           <div className="space-y-4">
-            {generateAvailableYearsForNewVariable().length === 0 ? (
-              /* Mensaje cuando no hay años disponibles */
-              <div className="flex flex-col items-center justify-center gap-3 py-8 bg-orange-50 border border-orange-200 rounded-lg">
-                <AlertCircle className="h-12 w-12 text-orange-500" />
-                <div className="text-center space-y-1">
-                  <p className="text-base font-semibold text-orange-700">No hay años disponibles</p>
-                  <p className="text-sm text-orange-600">Todos los años ya tienen objetivos registrados</p>
-                  <p className="text-xs text-gray-500 mt-2">Los años con datos: {yearsWithData.join(', ')}</p>
+            <>
+              {/* Selectores en línea */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Selector de año */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Año</Label>
+                  <Select value={selectedYearForNewVariable} onValueChange={(v) => setSelectedYearForNewVariable(v)}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Selecciona un año..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {allYears.map((year) => (
+                        <SelectItem key={year} value={year.toString()}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{year}</span>
+                          </div>
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
-              </div>
-            ) : (
-              <>
-                {/* Selectores en línea */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Selector de año */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Año</Label>
-                    <Select value={selectedYearForNewVariable} onValueChange={setSelectedYearForNewVariable}>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Selecciona un año disponible..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {generateAvailableYearsForNewVariable().map((year) => (
-                          <SelectItem key={year} value={year.toString()}>
+
+                {/* Selector de variable */}
+                <div className="space-y-2">
+                  <Label className="text-sm font-medium">Variable</Label>
+                  <Select value={newVariableName} onValueChange={(value) => { selectPreloadedVariable(value) }}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder={loadingExistingForYear ? 'Cargando...' : 'Variable...'} />
+                    </SelectTrigger>
+                    <SelectContent className="max-h-60">
+                      {variablesDisponibles.map((variable, index) => {
+                        const yaRegistrada = existingVariablesForYear.has(variable)
+                        return (
+                          <SelectItem key={index} value={variable} disabled={yaRegistrada}>
                             <div className="flex items-center gap-2">
-                              <span className="font-medium">{year}</span>
-                              <span className="text-xs text-green-600">(Disponible)</span>
+                              <span className={`font-medium ${yaRegistrada ? 'text-gray-400' : ''}`}>{variable}</span>
+                              {yaRegistrada && (
+                                <span className="text-xs text-red-500">(Ya registrada para este año)</span>
+                              )}
                             </div>
                           </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  {/* Selector de variable */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Variable</Label>
-                <Select value={newVariableName} onValueChange={(value) => {
-                  selectPreloadedVariable(value)
-                }}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Variable..." />
-                  </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                    {variablesDisponibles.map((variable, index) => (
-                      <SelectItem key={index} value={variable}>
-                        <span className="font-medium">{variable}</span>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                  </div>
+                        )
+                      })}
+                    </SelectContent>
+                  </Select>
                 </div>
+              </div>
 
-                {validationError && (
-                  <div className="flex items-center gap-1 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
-                    {validationError}
-                  </div>
-                )}
+              {validationError && (
+                <div className="flex items-center gap-1 text-sm text-red-600">
+                  <AlertCircle className="h-4 w-4" />
+                  {validationError}
+                </div>
+              )}
 
-                {/* Valores mensuales - Grid simple */}
-                <div className="space-y-3">
+              {/* Valores mensuales - Grid simple */}
+              <div className="space-y-3">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-medium text-gray-900">Valores Mensuales</h3>
@@ -1150,7 +1203,6 @@ export default function AgregarObjetivoPage() {
               </div>
                 </div>
               </>
-            )}
           </div>
 
           <DialogFooter className="flex gap-2">
@@ -1163,10 +1215,10 @@ export default function AgregarObjetivoPage() {
             </Button>
             <Button
               onClick={handleSaveVariable}
-              disabled={isAddingVariable || !isFormValid() || generateAvailableYearsForNewVariable().length === 0}
+              disabled={isAddingVariable || !isFormValid()}
               className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
             >
-              {isAddingVariable ? "Guardando..." : generateAvailableYearsForNewVariable().length === 0 ? "No hay años disponibles" : "Guardar Variable"}
+              {isAddingVariable ? "Guardando..." : "Guardar Variable"}
             </Button>
           </DialogFooter>
         </DialogContent>
