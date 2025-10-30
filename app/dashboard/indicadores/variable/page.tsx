@@ -213,7 +213,8 @@ export default function VariablesPage() {
   const handleConfirmAddNextMonth = async () => {
     if (!variableToAdd || !newMonthValue) return
 
-    const valorNumerico = parseFloat(newMonthValue)
+    // Limpiar el valor antes de convertir: quitar comas
+    const valorNumerico = parseFloat(newMonthValue.replace(/,/g, ''))
     if (isNaN(valorNumerico)) {
       toast.error('Por favor ingresa un valor numérico válido')
       return
@@ -238,7 +239,7 @@ export default function VariablesPage() {
           periodo: nextMonthString,
           valor: valorNumerico,
           creado_Por: 'Usuario',
-          observaciones_Periodo: newMonthObservations || `Variable agregada para el próximo mes: ${getMonthName(nextMonth)} ${nextMonth.getFullYear()}`
+          observaciones_Periodo: newMonthObservations || null
         })
       })
       const json = await res.json()
@@ -276,8 +277,8 @@ export default function VariablesPage() {
 
   const handleSaveEdit = async () => {
     if (!itemToEdit) return
-
-    const valorNumerico = parseFloat(newValue)
+    // Limpiar valor antes de convertir
+    const valorNumerico = parseFloat(newValue.replace(/,/g, ''))
     if (isNaN(valorNumerico)) {
       toast.error('El valor debe ser un número válido')
       return

@@ -469,21 +469,20 @@ export default function AgregarObjetivoPage() {
     try {
       // Construir payload de actualizaciones por cada mes editado
       const updates = Object.entries(editVariableValues).map(([mes, data]) => {
-        // Encontrar año y mes
         const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"]
         const mesIndex = months.indexOf(mes)
         const year = selectedYearForAnnual
-        // Buscar id_Objetivo_Variable para ese mes (no tenemos en el estado, asumimos mismo id para todos los meses)
-        // periodos como yyyy-mm-01
         const periodo = `${year}-${String(mesIndex+1).padStart(2, '0')}-01`
+        // limpiar comas antes de enviar
+        const valorLimpio = data.valor ? data.valor.replace(/,/g, '') : ''
+        const valorNum = valorLimpio !== '' ? parseFloat(valorLimpio) : null
         return {
-          id_Objetivo_Variable: editingVariable.id, // Es el id principal objetivo
+          id_Objetivo_Variable: editingVariable.id,
           periodo,
-          valorObjetivo: data.valor,
+          valorObjetivo: valorNum,
           observaciones_objetivo: data.observaciones||null
         }
       });
-      // Consumir API
       const response = await fetch('/api/objetivos', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -496,7 +495,6 @@ export default function AgregarObjetivoPage() {
       setEditVariableDialogOpen(false)
       setEditingVariable(null)
       setEditVariableValues({})
-      // Refrescar datos desde la BD
       await fetchObjetivos(selectedYearForAnnual)
     } catch (error) {
       console.error("Error guardando edición:", error)
@@ -546,9 +544,11 @@ export default function AgregarObjetivoPage() {
       const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"];
       const year = selectedYearForAnnual;
       const updates = months.map((mes, i) => {
-        const nuevoValor = rowEditValues[mes];
+        const nuevoValorRaw = rowEditValues[mes];
         const valorOriginal = objetivoOriginal && objetivoOriginal.valoresMensuales ? objetivoOriginal.valoresMensuales[mes]?.valor : undefined;
         const idObjetivo = objetivoOriginal && objetivoOriginal.valoresMensuales ? objetivoOriginal.valoresMensuales[mes]?.idObjetivo : null;
+        // limpiar comas
+        const nuevoValor = typeof nuevoValorRaw === 'string' ? nuevoValorRaw.replace(/,/g, '') : nuevoValorRaw;
         if (
           idObjetivo &&
           nuevoValor !== undefined && nuevoValor !== valorOriginal && nuevoValor !== '' && nuevoValor !== "-"
@@ -556,7 +556,7 @@ export default function AgregarObjetivoPage() {
           return {
             id_Objetivo_Variable: idObjetivo,
             periodo: `${year}-${String(i + 1).padStart(2, "0")}-01`,
-            valorObjetivo: parseFloat(nuevoValor),
+            valorObjetivo: parseFloat(nuevoValor as string),
             observaciones_objetivo: null
           }
         }
