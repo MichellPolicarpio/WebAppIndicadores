@@ -58,12 +58,14 @@ export async function getConnection(): Promise<any> {
       pool = new sql.ConnectionPool(dbConfig)
       await pool.connect()
       console.log('✅ Conexión a SQL Server establecida correctamente')
-      
-      // Manejar eventos del pool
-      pool.on('error', (err: any) => {
-        console.error('❌ Error en el pool de SQL Server:', err)
-        pool = null
-      })
+
+      // FIX: Proteger pool.on - solo si pool existe y tiene método 'on'
+      if (pool && typeof pool.on === 'function') {
+        pool.on('error', (err: any) => {
+          console.error('❌ Error en el pool de SQL Server:', err)
+          pool = null
+        })
+      }
     }
     return pool
   } catch (error) {
@@ -98,7 +100,16 @@ export async function executeQuery(query: string, params?: any[] | Record<string
   }
   
   try {
-    const connection = await getConnection()
+    let connection = await getConnection()
+    // Guard: si por alguna razón la conexión es null, reintentar creando pool
+    if (!connection) {
+      console.warn('⚠️ getConnection retornó null. Reintentando crear pool...')
+      pool = null
+      connection = await getConnection()
+      if (!connection) {
+        throw new Error('No fue posible obtener conexión a la base de datos')
+      }
+    }
     
     const request = connection.request()
     
@@ -124,11 +135,7 @@ export async function executeQuery(query: string, params?: any[] | Record<string
       }
     }
     
-    // console.log('🔍 Ejecutando consulta SQL:', query.substring(0, 100) + '...')
-    // console.log('🔑 Parámetros:', params)
-    
     const result = await request.query(query)
-    // console.log('✅ Consulta ejecutada exitosamente:', result.recordset?.length || 0, 'registros')
     
     // Resetear contador de reintentos en caso de éxito
     reconnectAttempts = 0
@@ -142,10 +149,7 @@ export async function executeQuery(query: string, params?: any[] | Record<string
       reconnectAttempts++
       console.log(`🔄 Intento de reconexión ${reconnectAttempts}/${MAX_RECONNECT_ATTEMPTS}...`)
       pool = null
-      
-      // Esperar un momento antes de reintentar
       await new Promise(resolve => setTimeout(resolve, 500))
-      
       return executeQuery(query, params)
     }
     

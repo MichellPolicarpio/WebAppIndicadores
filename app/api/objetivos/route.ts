@@ -75,40 +75,38 @@ export async function GET(req: NextRequest) {
       const variableId = row.id_Variable
       const mes = row.mes
       const nombreMes = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic'][mes - 1]
-      
       if (!acc[variableId]) {
-        // Inicializar con todos los meses en "-"
         const valoresMensualesInit: any = {}
         const valoresRealesInit: any = {}
         const mesesNombres = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Set', 'Oct', 'Nov', 'Dic']
         mesesNombres.forEach(m => {
-          valoresMensualesInit[m] = '-'  // Objetivos
-          valoresRealesInit[m] = '-'      // Valores reales
+          valoresMensualesInit[m] = { valor: '-', idObjetivo: null, observaciones: null, periodo: null }
+          valoresRealesInit[m] = '-'
         })
-        
         acc[variableId] = {
           id: variableId.toString(),
           nombre: row.nombreVariable,
           valorObjetivo: '-',
-          valoresMensuales: valoresMensualesInit,  // Objetivos por mes
-          valoresReales: valoresRealesInit,         // Valores reales por mes
+          valoresMensuales: valoresMensualesInit,
+          valoresReales: valoresRealesInit,
           periodo: `${nombreMes} ${row.anio}`,
           progreso: 0,
         }
       }
-      
-      // Agregar valor objetivo mensual
+      // Guardar valores mensuales con id (¡la clave!)
+      acc[variableId].valoresMensuales[nombreMes] = {
+        valor: row.valorObjetivo != null ? parseFloat(row.valorObjetivo).toFixed(2) : '-',
+        idObjetivo: row.id_Objetivo_Variable,
+        observaciones: row.observaciones_objetivo || null,
+        periodo: row.periodo
+      }
+      // Guardar el último valor como valorObjetivo general (sólo display)
       if (row.valorObjetivo != null) {
-        acc[variableId].valoresMensuales[nombreMes] = parseFloat(row.valorObjetivo).toFixed(2)
-        // Guardar también como valorObjetivo general (usar el último o promedio)
         acc[variableId].valorObjetivo = parseFloat(row.valorObjetivo).toFixed(2)
       }
-      
-      // Agregar valor real mensual
       if (row.valorReal != null) {
         acc[variableId].valoresReales[nombreMes] = parseFloat(row.valorReal).toFixed(2)
       }
-      
       return acc
     }, {})
 
@@ -250,6 +248,67 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ 
       success: false, 
       message: 'Error creando objetivos', 
+      error: error.message || String(error)
+    }, { status: 500 })
+  }
+}
+
+// PUT: Editar objetivo anual existente
+export async function PUT(req: NextRequest) {
+  try {
+    // Validar autenticación
+    const cookieStore = await cookies()
+    const userCookie = cookieStore.get('user')
+    if (!userCookie?.value) {
+      return NextResponse.json({ success: false, message: 'Usuario no autenticado' }, { status: 401 })
+    }
+    const user = JSON.parse(userCookie.value)
+    if (!user || !user.idEmpresa_Gerencia) {
+      return NextResponse.json({ success: false, message: 'Usuario sin empresa asignada' }, { status: 401 })
+    }
+
+    // Recibir y LOGUEAR el payload recibido
+    const body = await req.json()
+    const updates = Array.isArray(body) ? body : [body]
+    console.log('🔄 [PUT /api/objetivos] Payload recibido para actualizar:', JSON.stringify(updates, null, 2))
+
+    let updatedCount = 0
+
+    for (const upd of updates) {
+      // Datos requeridos
+      const { id_Objetivo_Variable, periodo, valorObjetivo, observaciones_objetivo } = upd
+      if (!id_Objetivo_Variable || !periodo) {
+        return NextResponse.json({
+          success: false,
+          message: 'Faltan datos requeridos: id_Objetivo_Variable y periodo'
+        }, { status: 400 })
+      }
+      // Actualizar el registro
+      const updateQuery = `
+        UPDATE INDICADORES.OBJETIVOS_VARIABLES_HECHOS
+        SET valorObjetivo = @valorObjetivo,
+            observaciones_objetivo = @observaciones_objetivo,
+            fecha_modificacion = GETDATE(),
+            modificado_por = @modificado_por
+        WHERE id_Objetivo_Variable = @id_Objetivo_Variable AND periodo = @periodo
+      `
+      await executeQuery(updateQuery, {
+        valorObjetivo: valorObjetivo !== undefined && valorObjetivo !== null && valorObjetivo !== '-' ? valorObjetivo : null,
+        observaciones_objetivo: observaciones_objetivo || null,
+        id_Objetivo_Variable,
+        periodo,
+        modificado_por: user.usuario || user.email || 'Sistema'
+      })
+      updatedCount++
+    }
+
+    return NextResponse.json({ success: true, message: `${updatedCount} objetivo(s) actualizado(s)` })
+
+  } catch (error: any) {
+    console.error('❌ Error editando objetivo:', error)
+    return NextResponse.json({
+      success: false,
+      message: 'Error editando objetivo',
       error: error.message || String(error)
     }, { status: 500 })
   }

@@ -1,10 +1,10 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar, Eye, ChevronDown } from "lucide-react"
+import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar, Eye, ChevronDown, Trash2 } from "lucide-react"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -82,33 +82,47 @@ export default function VariablesPage() {
   const [loadingHistory, setLoadingHistory] = useState(false)
   const [currentVariableName, setCurrentVariableName] = useState("")
   
+  // Estado para el siguiente mes (para evitar duplicados al agregar)
+  const [nextMonthVariables, setNextMonthVariables] = useState<VariableRow[]>([])
+
+  // Precompute a lookup para el próximo mes: ids de id_Variable_Empresa_Gerencia existentes
+  const nextMonthIdSet = useMemo(() => {
+    const set = new Set<number>()
+    nextMonthVariables.forEach(v => set.add(v.id_Variable_Empresa_Gerencia))
+    return set
+  }, [nextMonthVariables])
 
   useEffect(() => {
     fetchVariables()
+    fetchNextMonthVariables()
   }, [selectedMonth])
 
-  const fetchVariables = async () => {
+  const fetchVariables = async (dateOverride?: Date) => {
     try {
       setIsLoading(true)
       setError("")
       
-      // Formatear el mes seleccionado para la API
-      const year = selectedMonth.getFullYear()
-      const month = selectedMonth.getMonth() + 1
+      // Formatear el mes (con override si viene)
+      const baseDate = dateOverride ?? selectedMonth
+      const year = baseDate.getFullYear()
+      const month = baseDate.getMonth() + 1
       const monthStr = `${year}-${month.toString().padStart(2, '0')}-01`
       
       const res = await fetch(`/api/variables?month=${monthStr}`, { cache: 'no-store' })
       const json = await res.json()
       console.log('Respuesta del API:', json)
       if (!json.success) {
-        throw new Error(json.error || json.message || 'Error desconocido')
+        setError(json.error || json.message || 'Error desconocido')
+        setVariables([])
+        setAvailableMonths([])
+        return
       }
       setVariables(json.data || [])
       setAvailableMonths(json.periodos || [])
       
-      // Extraer años únicos de los períodos disponibles
-      const years = [...new Set((json.periodos || []).map((period: string) => new Date(period).getFullYear()))]
-        .sort((a, b) => b - a) // Ordenar de más reciente a más antiguo
+      // Extraer años únicos de los períodos disponibles (usar UTC para evitar desfase)
+      const years = [...new Set((json.periodos || []).map((period: string) => new Date(period).getUTCFullYear()))]
+        .sort((a, b) => b - a)
       setAvailableYears(years)
     } catch (e: any) {
       console.error('Error en fetchVariables:', e)
@@ -118,10 +132,30 @@ export default function VariablesPage() {
     }
   }
 
+  const fetchNextMonthVariables = async () => {
+    try {
+      // Calcular el próximo mes basado en selectedMonth
+      const nextMonthDate = new Date(selectedMonth)
+      nextMonthDate.setMonth(nextMonthDate.getMonth() + 1)
+      const year = nextMonthDate.getFullYear()
+      const month = nextMonthDate.getMonth() + 1
+      const monthStr = `${year}-${month.toString().padStart(2, '0')}-01`
+      const res = await fetch(`/api/variables?month=${monthStr}`, { cache: 'no-store' })
+      const json = await res.json()
+      if (!json.success) {
+        setNextMonthVariables([])
+        return
+      }
+      setNextMonthVariables(json.data || [])
+    } catch (e) {
+      setNextMonthVariables([])
+    }
+  }
+
   const formatPeriodo = (periodo: string) => {
     const d = new Date(periodo)
     const meses = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"]
-    return `${meses[d.getMonth()]} ${d.getFullYear()}`
+    return `${meses[d.getUTCMonth()]} ${d.getUTCFullYear()}`
   }
 
   const formatFecha = (fecha: string) => {
@@ -191,7 +225,10 @@ export default function VariablesPage() {
       // Calcular el próximo mes
       const nextMonth = new Date(selectedMonth)
       nextMonth.setMonth(nextMonth.getMonth() + 1)
-      const nextMonthString = nextMonth.toISOString().split('T')[0] + 'T00:00:00.000Z'
+      // Forzar día 01 del próximo mes en UTC
+      const year = nextMonth.getFullYear()
+      const month = String(nextMonth.getMonth() + 1).padStart(2, '0')
+      const nextMonthString = `${year}-${month}-01T00:00:00.000Z`
 
       const res = await fetch('/api/variables', {
         method: 'POST',
@@ -212,8 +249,12 @@ export default function VariablesPage() {
 
       toast.success(`Variable "${variableToAdd.name}" agregada para ${getMonthName(nextMonth)} ${nextMonth.getFullYear()}`)
       
-      // Recargar las variables del mes actual
-      await fetchVariables()
+      // Mover la vista al próximo mes para ver inmediatamente el nuevo registro
+      setSelectedMonth(new Date(nextMonth))
+      // Recargar las variables del nuevo mes seleccionado (evitar desfase de estado)
+      await fetchVariables(nextMonth)
+      // Y también recargar las del siguiente mes del nuevo contexto
+      await fetchNextMonthVariables()
     } catch (e: any) {
       toast.error(e.message || 'Error al agregar la variable')
     } finally {
@@ -275,6 +316,26 @@ export default function VariablesPage() {
       toast.error(e.message || 'Error al actualizar el indicador')
     } finally {
       setIsSaving(false)
+    }
+  }
+
+  // ==================== ELIMINAR ====================
+  const handleDeleteRow = async (row: VariableRow) => {
+    const ok = window.confirm(`¿Eliminar "${row.nombreVariable}" del período ${formatPeriodo(row.periodo)}?`)
+    if (!ok) return
+    try {
+      const res = await fetch(`/api/variables/${row.id_Variable_EmpresaGerencia_Hechos}`, { method: 'DELETE' })
+      const json = await res.json()
+      if (!json.success) {
+        throw new Error(json.message || 'Error al eliminar')
+      }
+      // Quitar de la tabla local
+      setVariables(prev => prev.filter(v => v.id_Variable_EmpresaGerencia_Hechos !== row.id_Variable_EmpresaGerencia_Hechos))
+      toast.success('Registro eliminado')
+      // Recargar conjuntos auxiliares
+      await fetchNextMonthVariables()
+    } catch (e: any) {
+      toast.error(e.message || 'No se pudo eliminar el registro')
     }
   }
 
@@ -475,9 +536,6 @@ export default function VariablesPage() {
                     <th className="text-center px-3 xl:px-6 py-3 text-xs font-semibold text-gray-700 min-w-[120px] xl:min-w-[150px]">
                       Valor
                     </th>
-                    <th className="text-center px-3 xl:px-6 py-3 text-xs font-semibold text-gray-700 min-w-[120px] xl:min-w-[150px]">
-                      Período
-                    </th>
                     <th className="text-center px-3 xl:px-6 py-3 text-xs font-semibold text-gray-700 min-w-[200px] xl:min-w-[250px]">
                       Observaciones
                     </th>
@@ -498,9 +556,6 @@ export default function VariablesPage() {
                         <span className="text-blue-600 font-medium">
                           {row.valor.toLocaleString()}
                         </span>
-                      </td>
-                      <td className="px-3 xl:px-6 py-3 text-center text-xs text-gray-700">
-                        {formatPeriodo(row.periodo)}
                       </td>
                       <td className="px-3 xl:px-6 py-3 text-center text-xs">
                         {row.observaciones_Periodo && row.observaciones_Periodo.length > 30 ? (
@@ -550,13 +605,28 @@ export default function VariablesPage() {
                           </Button>
                           <Button
                             size="sm"
-                            onClick={() => handleAddNextMonth(row.id_Variable_Empresa_Gerencia, row.nombreVariable)}
+                            onClick={() => handleDeleteRow(row)}
                             variant="outline"
-                            className="h-10 w-10 p-0 rounded-xl border-2 border-green-500 text-green-500 hover:bg-green-50 hover:border-green-600 hover:text-green-600 transition-all duration-200"
-                            title="Agregar variable del próximo mes"
+                            className="h-10 w-10 p-0 rounded-xl border-2 border-red-500 text-red-500 hover:bg-red-50 hover:border-red-600 hover:text-red-600 transition-all duration-200"
+                            title="Eliminar"
                           >
-                            <Plus className="h-4 w-4" />
+                            <Trash2 className="h-4 w-4" />
                           </Button>
+                          {(() => {
+                            const existeEnSiguienteMes = nextMonthIdSet.has(row.id_Variable_Empresa_Gerencia)
+                            return (
+                              <Button
+                                size="sm"
+                                onClick={() => handleAddNextMonth(row.id_Variable_Empresa_Gerencia, row.nombreVariable)}
+                                variant="outline"
+                                disabled={existeEnSiguienteMes}
+                                className={`h-10 w-10 p-0 rounded-xl border-2 ${existeEnSiguienteMes ? 'border-gray-400 text-gray-400 cursor-not-allowed opacity-50' : 'border-green-500 text-green-500 hover:bg-green-50 hover:border-green-600 hover:text-green-600'} transition-all duration-200`}
+                                title={existeEnSiguienteMes ? 'Ya existe esta variable en el próximo mes' : 'Agregar variable del próximo mes'}
+                              >
+                                <Plus className="h-4 w-4" />
+                              </Button>
+                            )
+                          })()}
                         </div>
                       </td>
                     </tr>
@@ -695,7 +765,7 @@ export default function VariablesPage() {
 
       {/* ==================== MODAL DE HISTÓRICO ==================== */}
       <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
-        <DialogContent className="sm:max-w-5xl max-h-[80vh]">
+        <DialogContent className="sm:max-w-5xl max-h-[85vh] overflow-hidden">
           <DialogHeader>
             <DialogTitle>Histórico de Variable</DialogTitle>
             <DialogDescription>
@@ -703,7 +773,7 @@ export default function VariablesPage() {
             </DialogDescription>
           </DialogHeader>
           
-          <div className="overflow-auto max-h-[500px]">
+          <div className="overflow-auto max-h-[65vh]">
             {loadingHistory ? (
               <div className="text-center py-12 text-gray-500">Cargando histórico...</div>
             ) : historico.length === 0 ? (
@@ -714,7 +784,6 @@ export default function VariablesPage() {
                   <tr>
                     <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Periodo</th>
                     <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Valor</th>
-                    <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Creado</th>
                     <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Observaciones</th>
                   </tr>
                 </thead>
@@ -726,12 +795,6 @@ export default function VariablesPage() {
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-900 font-bold">
                         {row.valor.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-500">
-                        <div>{formatFecha(row.fecha_Creacion)}</div>
-                        {row.creado_Por && (
-                          <div className="text-xs text-gray-400">{row.creado_Por}</div>
-                        )}
                       </td>
                       <td className="px-4 py-3 text-sm text-gray-600">
                         {row.observaciones_Periodo ? (

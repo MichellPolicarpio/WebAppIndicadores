@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -210,38 +210,32 @@ export default function AgregarObjetivoPage() {
     "Recibos (mdp)"
   ]
 
-  // Cargar objetivos desde la base de datos
-  useEffect(() => {
-    const fetchObjetivos = async () => {
-      setLoadingObjetivos(true)
-      try {
-        // Determinar qué año usar según la vista
-        const yearToFetch = viewType === 'anual' ? selectedYearForAnnual : parseInt(selectedYear)
-        
-        const response = await fetch(`/api/objetivos?year=${yearToFetch}`)
-        const result = await response.json()
-        
-        if (result.success) {
-          // console.log('✅ Objetivos cargados:', result.data?.length || 0)
-          setObjetivos(result.data || [])
-          // Guardar años que tienen datos (solo si vienen en la respuesta)
-          if (result.years && result.years.length > 0) {
-            setYearsWithData(result.years)
-          }
-        } else {
-          console.error('❌ Error al cargar objetivos:', result.message)
-          setObjetivos([])
-        }
-      } catch (error) {
-        console.error('❌ Error fetching objetivos:', error)
+  const fetchObjetivos = useCallback(async (yearOverride?: number | string) => {
+    setLoadingObjetivos(true)
+    try {
+      const yearToFetch = viewType === 'anual' ? selectedYearForAnnual : parseInt(selectedYear)
+      const finalYear = yearOverride ?? yearToFetch
+      const response = await fetch(`/api/objetivos?year=${finalYear}`)
+      const result = await response.json()
+      if (result.success) {
+        setObjetivos(result.data || [])
+        if (result.years && result.years.length > 0) setYearsWithData(result.years)
+      } else {
+        console.error('❌ Error al cargar objetivos:', result.message)
         setObjetivos([])
-      } finally {
-        setLoadingObjetivos(false)
       }
+    } catch (error) {
+      console.error('❌ Error fetching objetivos:', error)
+      setObjetivos([])
+    } finally {
+      setLoadingObjetivos(false)
     }
+  }, [selectedYear, selectedYearForAnnual, setObjetivos, setYearsWithData, setLoadingObjetivos, viewType])
 
+  // Reemplazar el useEffect anterior por uno que use fetchObjetivos directamente
+  useEffect(() => {
     fetchObjetivos()
-  }, [selectedYearForAnnual, selectedYear, selectedMonth, viewType])
+  }, [selectedYearForAnnual, selectedYear, selectedMonth, viewType, fetchObjetivos])
 
   const handleEdit = (objetivo: Objetivo) => {
     setEditingId(objetivo.id)
@@ -468,29 +462,45 @@ export default function AgregarObjetivoPage() {
     setEditVariableDialogOpen(true)
   }
 
-  // Guardar edición completa
+  // Guardar edición completa (toda la variable, por ejemplo los 12 meses)
   const saveFullEdit = async () => {
     if (!editingVariable) return
-    
     setIsSavingEdit(true)
     try {
-      setObjetivos(prev => prev.map(obj => 
-        obj.id === editingVariable.id 
-          ? {
-              ...obj,
-              valoresMensuales: Object.keys(editVariableValues).reduce((acc, mes) => {
-                acc[mes] = editVariableValues[mes].valor || "-"
-                return acc
-              }, {} as {[mes: string]: string})
-            }
-          : obj
-      ))
-      
+      // Construir payload de actualizaciones por cada mes editado
+      const updates = Object.entries(editVariableValues).map(([mes, data]) => {
+        // Encontrar año y mes
+        const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"]
+        const mesIndex = months.indexOf(mes)
+        const year = selectedYearForAnnual
+        // Buscar id_Objetivo_Variable para ese mes (no tenemos en el estado, asumimos mismo id para todos los meses)
+        // periodos como yyyy-mm-01
+        const periodo = `${year}-${String(mesIndex+1).padStart(2, '0')}-01`
+        return {
+          id_Objetivo_Variable: editingVariable.id, // Es el id principal objetivo
+          periodo,
+          valorObjetivo: data.valor,
+          observaciones_objetivo: data.observaciones||null
+        }
+      });
+      // Consumir API
+      const response = await fetch('/api/objetivos', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      })
+      const result = await response.json()
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Error al guardar objetivos')
+      }
       setEditVariableDialogOpen(false)
       setEditingVariable(null)
       setEditVariableValues({})
+      // Refrescar datos desde la BD
+      await fetchObjetivos(selectedYearForAnnual)
     } catch (error) {
       console.error("Error guardando edición:", error)
+      setValidationError(error.message || 'Error al guardar edición')
     } finally {
       setIsSavingEdit(false)
     }
@@ -518,31 +528,63 @@ export default function AgregarObjetivoPage() {
   
   // Iniciar edición de fila específica
   const startRowEdit = (objetivo: Objetivo) => {
+    // Corrige: sólo tomar el .valor de cada mes, no el objeto completo
     setEditingRowId(objetivo.id)
-    setRowEditValues({...objetivo.valoresMensuales})
+    setRowEditValues(
+      Object.fromEntries(
+        Object.entries(objetivo.valoresMensuales).map(([mes, data]: any) => [mes, typeof data === 'object' && data !== null ? data.valor : data])
+      )
+    )
   }
 
   // Guardar edición de fila específica
   const saveRowEdit = async () => {
-    if (!editingRowId) return
-    
-    setIsSavingRow(true)
+    if (!editingRowId) return;
+    setIsSavingRow(true);
     try {
-      setObjetivos(prev => prev.map(obj => 
-        obj.id === editingRowId 
-          ? {
-              ...obj,
-              valoresMensuales: rowEditValues
-            }
-          : obj
-      ))
-      
-      setEditingRowId(null)
-      setRowEditValues({})
-    } catch (error) {
+      const objetivoOriginal = objetivos.find(obj => obj.id === editingRowId)
+      const months = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Set", "Oct", "Nov", "Dic"];
+      const year = selectedYearForAnnual;
+      const updates = months.map((mes, i) => {
+        const nuevoValor = rowEditValues[mes];
+        const valorOriginal = objetivoOriginal && objetivoOriginal.valoresMensuales ? objetivoOriginal.valoresMensuales[mes]?.valor : undefined;
+        const idObjetivo = objetivoOriginal && objetivoOriginal.valoresMensuales ? objetivoOriginal.valoresMensuales[mes]?.idObjetivo : null;
+        if (
+          idObjetivo &&
+          nuevoValor !== undefined && nuevoValor !== valorOriginal && nuevoValor !== '' && nuevoValor !== "-"
+        ) {
+          return {
+            id_Objetivo_Variable: idObjetivo,
+            periodo: `${year}-${String(i + 1).padStart(2, "0")}-01`,
+            valorObjetivo: parseFloat(nuevoValor),
+            observaciones_objetivo: null
+          }
+        }
+        return null;
+      }).filter(Boolean);
+      if (updates.length === 0) {
+        setEditingRowId(null);
+        setRowEditValues({});
+        setIsSavingRow(false);
+        return;
+      }
+      const response = await fetch('/api/objetivos', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(updates)
+      });
+      const result = await response.json();
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Error al guardar objetivo')
+      }
+      setEditingRowId(null);
+      setRowEditValues({});
+      await fetchObjetivos(selectedYearForAnnual);
+    } catch(error) {
       console.error("Error guardando edición de fila:", error)
+      setValidationError(error.message || 'Error al guardar edición de fila');
     } finally {
-      setIsSavingRow(false)
+      setIsSavingRow(false);
     }
   }
 
@@ -773,7 +815,7 @@ export default function AgregarObjetivoPage() {
                     <th className="text-center px-3 sm:px-6 xl:px-8 py-3 text-xs sm:text-sm font-semibold text-gray-700 min-w-[180px] xl:min-w-[250px]">Objetivo</th>
                     <th className="text-center px-3 sm:px-6 xl:px-8 py-3 text-xs sm:text-sm font-semibold text-gray-700 min-w-[100px] xl:min-w-[120px]">Valor Objetivo</th>
                     <th className="text-center px-3 sm:px-6 xl:px-8 py-3 text-xs sm:text-sm font-semibold text-gray-700 min-w-[100px] xl:min-w-[120px]">Real</th>
-                    <th className="text-center px-3 sm:px-6 xl:px-8 py-3 text-xs sm:text-sm font-semibold text-gray-700 min-w-[150px] xl:min-w-[180px]">Progreso</th>
+                    <th className="text-center px-3 sm:px-6 xl:px-8 py-3 text-xs sm:text-sm font-semibold text-gray-700 min-w-[150px] xl:min-w-[180px]">Cumplimiento</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">

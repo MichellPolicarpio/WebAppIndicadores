@@ -38,6 +38,14 @@ export async function GET(req: NextRequest) {
 
     if (monthParam) {
       // Si se especifica un mes, buscar variables de ese mes específico
+      // Parseo robusto de YYYY-MM sin depender de Date para evitar TZ
+      const match = monthParam.match(/^(\d{4})-(\d{2})-/)
+      if (!match) {
+        return NextResponse.json({ success: false, message: 'Parámetro month inválido' }, { status: 400 })
+      }
+      const yearFromParam = parseInt(match[1], 10)
+      const monthFromParam = parseInt(match[2], 10)
+
       query = `
         SELECT
             vegh.id_Variable_EmpresaGerencia_Hechos,
@@ -63,11 +71,10 @@ export async function GET(req: NextRequest) {
           AND MONTH(vegh.periodo) = @monthParam
         ORDER BY v.nombreVariable;
       `
-      const monthDate = new Date(monthParam)
       params = { 
         empresaGerenciaParam: empresaGerencia,
-        yearParam: monthDate.getFullYear(),
-        monthParam: monthDate.getMonth() + 1
+        yearParam: yearFromParam,
+        monthParam: monthFromParam
       }
     } else {
       // Si no se especifica mes, usar el comportamiento original (último periodo)
@@ -149,68 +156,110 @@ export async function POST(req: NextRequest) {
     // Validar autenticación desde cookies
     const cookieStore = await cookies()
     const userCookie = cookieStore.get('user')
-    
     if (!userCookie?.value) {
       console.error('❌ No se encontró cookie de usuario')
       return NextResponse.json({ success: false, message: 'Usuario no autenticado' }, { status: 401 })
     }
-
     const user = JSON.parse(userCookie.value)
     console.log('👤 Usuario desde cookie:', { id: user.id, empresa: user.idEmpresa_Gerencia })
-    
     if (!user || !user.idEmpresa_Gerencia) {
       console.error('❌ Usuario sin empresa asignada')
-      return NextResponse.json({ success: false, message: 'Usuario no autenticado' }, { status: 401 })
+      return NextResponse.json({ success: false, message: 'Usuario sin empresa asignada' }, { status: 401 })
     }
-
     const body = await req.json()
-    const { 
-      id_Variable_Empresa_Gerencia, 
-      periodo, 
-      valor, 
-      creado_Por, 
-      observaciones_Periodo,
-      validadorDeInsercion 
-    } = body
-
-    if (!id_Variable_Empresa_Gerencia || !periodo || valor === undefined || !creado_Por) {
-      return NextResponse.json({ 
-        success: false, 
-        message: 'Faltan campos requeridos' 
-      }, { status: 400 })
-    }
-
-    console.log('🔍 Creando nueva variable:', { id_Variable_Empresa_Gerencia, periodo, valor })
-
-    const query = `
-      INSERT INTO INDICADORES.VARIABLES_EMPRESA_GERENCIA_HECHOS
-      (id_Variable_Empresa_Gerencia, periodo, valor, fecha_Creacion, 
-       creado_Por, observaciones_Periodo, validadorDeInsercion)
-      VALUES 
-      (@id_Variable_Empresa_Gerencia, @periodo, @valor, GETDATE(), 
-       @creado_Por, @observaciones_Periodo, @validadorDeInsercion)
-    `
-
-    await executeQuery(query, {
+    const {
       id_Variable_Empresa_Gerencia,
       periodo,
       valor,
       creado_Por,
-      observaciones_Periodo: observaciones_Periodo || null,
-      validadorDeInsercion: validadorDeInsercion || null
+      observaciones_Periodo,
+      validadorDeInsercion
+    } = body
+    if (!id_Variable_Empresa_Gerencia || !periodo || valor === undefined || !creado_Por) {
+      console.error('❌ POST faltan campos', {
+        id_Variable_Empresa_Gerencia, periodo, valor, creado_Por
+      })
+      return NextResponse.json({ success: false, message: 'Faltan campos requeridos' }, { status: 400 })
+    }
+    console.log('[INSERT payload]', {
+      id_Variable_Empresa_Gerencia, periodo, valor, creado_Por, observaciones_Periodo, validadorDeInsercion
     })
 
-    console.log('✅ Variable creada exitosamente')
+    // Normalizar periodo a primer día del mes en SQL y hacer UPSERT (update si ya existe ese id+mes)
+    const upsertQuery = `
+      DECLARE @y INT = YEAR(@periodo);
+      DECLARE @m INT = MONTH(@periodo);
+      DECLARE @p DATE = DATEFROMPARTS(@y, @m, 1);
+
+      IF EXISTS (
+        SELECT 1 FROM INDICADORES.VARIABLES_EMPRESA_GERENCIA_HECHOS
+        WHERE id_Variable_Empresa_Gerencia = @id_Variable_Empresa_Gerencia
+          AND YEAR(periodo) = @y AND MONTH(periodo) = @m
+      )
+      BEGIN
+        UPDATE INDICADORES.VARIABLES_EMPRESA_GERENCIA_HECHOS
+        SET valor = @valor,
+            observaciones_Periodo = @observaciones_Periodo,
+            fecha_Modificacion = GETDATE(),
+            modificado_Por = @creado_Por
+        WHERE id_Variable_Empresa_Gerencia = @id_Variable_Empresa_Gerencia
+          AND YEAR(periodo) = @y AND MONTH(periodo) = @m;
+      END
+      ELSE
+      BEGIN
+        INSERT INTO INDICADORES.VARIABLES_EMPRESA_GERENCIA_HECHOS
+          (id_Variable_Empresa_Gerencia, periodo, valor, fecha_Creacion, creado_Por, observaciones_Periodo, validadorDeInsercion)
+        VALUES
+          (@id_Variable_Empresa_Gerencia, @p, @valor, GETDATE(), @creado_Por, @observaciones_Periodo, @validadorDeInsercion);
+      END;
+
+      SELECT TOP 1
+        vegh.id_Variable_EmpresaGerencia_Hechos,
+        vegh.id_Variable_Empresa_Gerencia,
+        vegh.periodo,
+        vegh.valor,
+        vegh.observaciones_Periodo
+      FROM INDICADORES.VARIABLES_EMPRESA_GERENCIA_HECHOS vegh
+      WHERE vegh.id_Variable_Empresa_Gerencia = @id_Variable_Empresa_Gerencia
+        AND YEAR(vegh.periodo) = @y AND MONTH(vegh.periodo) = @m
+      ORDER BY vegh.id_Variable_EmpresaGerencia_Hechos DESC;
+    `
+
+    let insertedRows: any[] = []
+    try {
+      insertedRows = await executeQuery(upsertQuery, {
+        id_Variable_Empresa_Gerencia,
+        periodo,
+        valor,
+        creado_Por,
+        observaciones_Periodo: observaciones_Periodo || null,
+        validadorDeInsercion: validadorDeInsercion || null
+      })
+    } catch (sqlError) {
+      let msg = 'Error creando/actualizando variable';
+      if (sqlError.message && sqlError.message.match(/duplicate|unique|constraint/gi)) {
+        msg = 'Ya existe una variable de ese tipo para ese mes (duplicado) o hay conflicto de datos.';
+      }
+      console.error('❌ SQL ERROR UPSERT variable:', sqlError)
+      return NextResponse.json({
+        success: false,
+        message: msg,
+        error: sqlError.message
+      }, { status: 400 })
+    }
+
+    console.log('✅ UPSERT OK, registro:', insertedRows?.[0])
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Variable creada exitosamente' 
+      message: 'Variable creada/actualizada exitosamente',
+      row: insertedRows?.[0] || null
     })
   } catch (error: any) {
-    console.error('❌ Error creando variable:', error)
-    return NextResponse.json({ 
-      success: false, 
-      message: 'Error creando variable', 
+    console.error('❌ Error creando variable POST:', error)
+    return NextResponse.json({
+      success: false,
+      message: 'Error creando variable',
       error: error.message || String(error)
     }, { status: 500 })
   }
