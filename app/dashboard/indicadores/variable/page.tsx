@@ -518,7 +518,7 @@ export default function VariablesPage() {
                   Indicadores Mensuales del Período
                 </CardTitle>
                 <CardDescription className="text-sm sm:text-base text-gray-600 mt-1">
-                  {variables.length} indicador{variables.length !== 1 ? 'es' : ''} • {getMonthYear(selectedMonth)}
+                  {variables.length}/18 indicador{variables.length !== 1 ? 'es' : ''} • {getMonthYear(selectedMonth)}
                 </CardDescription>
               </div>
               <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold">
