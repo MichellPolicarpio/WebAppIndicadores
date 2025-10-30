@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, PlusCircle, Settings, Menu, ChevronLeft, BarChart3, Building2 } from "lucide-react"
+import { Home, PlusCircle, Settings, Menu, ChevronLeft, BarChart3, Building2, Target } from "lucide-react"
 import Image from "next/image"
 import type { User } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -31,9 +31,14 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
       exact: true,
     },
     {
-      label: "Agregar Indicadores",
-      icon: PlusCircle,
-      href: "/dashboard/indicadores",
+      label: "Indicadores Reales",
+      icon: BarChart3,
+      href: "/dashboard/indicadores/variable",
+    },
+    {
+      label: "Indicadores Objetivos",
+      icon: Target,
+      href: "/dashboard/indicadores/objetivo",
     },
     {
       label: "Configuración",

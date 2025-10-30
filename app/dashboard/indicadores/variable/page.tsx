@@ -369,14 +369,6 @@ export default function VariablesPage() {
     <div className="space-y-2 sm:space-y-3 w-full mx-auto px-3 sm:px-4 lg:px-6 max-w-7xl">
       {/* Header Section */}
       <div className="flex items-start gap-3 sm:gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => router.push("/dashboard/indicadores")}
-          className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex-shrink-0 mt-1"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Valores Guardados</h1>
           <p className="text-sm sm:text-base text-gray-600 mt-1">Selecciona un mes para ver los indicadores mensuales</p>

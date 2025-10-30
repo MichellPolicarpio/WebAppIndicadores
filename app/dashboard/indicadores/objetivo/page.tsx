@@ -656,14 +656,6 @@ export default function AgregarObjetivoPage() {
     <div className="space-y-2 sm:space-y-3 w-full mx-auto px-3 sm:px-4 lg:px-6 max-w-7xl 2xl:max-w-[90vw] 3xl:max-w-[85vw]">
       {/* Header Section */}
       <div className="flex items-start gap-3 sm:gap-4">
-        <Button
-          variant="outline"
-          size="icon"
-          onClick={() => router.push("/dashboard/indicadores")}
-          className="border-gray-300 text-gray-700 hover:bg-gray-100 hover:text-gray-900 flex-shrink-0 mt-1"
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
         <div className="flex-1">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Objetivos</h1>
           <p className="text-sm sm:text-base text-gray-600 mt-1">Gestiona los objetivos y metas del sistema</p>
@@ -892,8 +884,10 @@ export default function AgregarObjetivoPage() {
                     </tr>
                   ) : objetivos.map((objetivo) => {
                     // Obtener valores del mes seleccionado
-                    const valorObjetivoMes = objetivo.valoresMensuales ? objetivo.valoresMensuales[selectedMonth] : '-'
-                    const valorReal = objetivo.valoresReales ? objetivo.valoresReales[selectedMonth] : '-'
+                    const rawObjetivo = objetivo.valoresMensuales ? objetivo.valoresMensuales[selectedMonth] : '-'
+                    const valorObjetivoMes = typeof rawObjetivo === 'string' ? rawObjetivo : (rawObjetivo?.valor ?? '-')
+                    const rawReal = objetivo.valoresReales ? objetivo.valoresReales[selectedMonth] : '-'
+                    const valorReal = typeof rawReal === 'string' ? rawReal : (rawReal?.valor ?? '-')
                     
                     const valorObjetivoNum = parseFloat(valorObjetivoMes) || 0
                     const valorRealNum = parseFloat(valorReal) || 0
@@ -982,8 +976,10 @@ export default function AgregarObjetivoPage() {
                     </tr>
                   ) : objetivos.map((objetivo) => (
                     <tr key={objetivo.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-3 xl:px-6 py-3 text-center text-xs text-gray-900 sticky left-0 bg-white z-10 font-medium max-w-[150px] xl:max-w-[200px] truncate" title={objetivo.nombre}>
-                        {objetivo.nombre}
+                      <td className="px-3 xl:px-6 py-3 text-center text-xs text-gray-900 sticky left-0 bg-white z-10 font-medium max-w-[150px] xl:max-w-[200px]" title={objetivo.nombre}>
+                        <div className="whitespace-normal break-words hyphens-auto mx-auto" style={{ lineHeight: '1.2', maxHeight: '2.4em', overflow: 'hidden' }}>
+                          {objetivo.nombre}
+                        </div>
                       </td>
                       {generateMonths().map((mes) => (
                         <td key={mes} className="px-2 xl:px-4 py-3 text-center text-xs">
