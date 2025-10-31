@@ -4,7 +4,7 @@ import type React from "react"
 
 import { useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { BarChart3, Home, PlusCircle, Target, Settings, LayoutDashboard } from "lucide-react"
+import { BarChart3, Home, PlusCircle, Target, Settings, LayoutDashboard, Shield } from "lucide-react"
 import { PowerBIAuthWidget } from "@/components/power-bi-auth-widget"
 import { getUser, type User } from "@/lib/auth"
 import { DashboardHeader } from "@/components/dashboard-header"
@@ -26,6 +26,7 @@ export default function DashboardLayout({
     if (pathname.startsWith("/dashboard/indicadores/variable")) return { title: "Indicadores Mensuales", icon: BarChart3 }
     if (pathname.startsWith("/dashboard/indicadores/objetivo")) return { title: "Objetivos", icon: Target }
     if (pathname.startsWith("/dashboard/indicadores")) return { title: "Agregar Indicadores", icon: PlusCircle }
+    if (pathname.startsWith("/dashboard/admin")) return { title: "Panel Admin", icon: Shield }
     if (pathname.startsWith("/dashboard/configuracion")) return { title: "Configuración", icon: Settings }
     return { title: "", icon: null }
   }
@@ -35,9 +36,14 @@ export default function DashboardLayout({
     if (!currentUser) {
       router.push("/")
     } else {
+      // Proteger ruta de admin: solo usuarios con rolUsuario === 1 pueden acceder
+      if (pathname.startsWith("/dashboard/admin") && currentUser.rolUsuario !== 1) {
+        router.push("/dashboard")
+        return
+      }
       setUser(currentUser)
     }
-  }, [router])
+  }, [router, pathname])
 
   // Ajustar sidebar según tamaño de pantalla al cargar
   useEffect(() => {

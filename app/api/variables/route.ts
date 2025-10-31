@@ -167,13 +167,13 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, message: 'Usuario sin empresa asignada' }, { status: 401 })
     }
     const body = await req.json()
-    const {
-      id_Variable_Empresa_Gerencia,
-      periodo,
-      valor,
-      creado_Por,
+    const { 
+      id_Variable_Empresa_Gerencia, 
+      periodo, 
+      valor, 
+      creado_Por, 
       observaciones_Periodo,
-      validadorDeInsercion
+      validadorDeInsercion 
     } = body
     if (!id_Variable_Empresa_Gerencia || !periodo || valor === undefined || !creado_Por) {
       console.error('❌ POST faltan campos', {
@@ -207,9 +207,9 @@ export async function POST(req: NextRequest) {
       END
       ELSE
       BEGIN
-        INSERT INTO INDICADORES.VARIABLES_EMPRESA_GERENCIA_HECHOS
+      INSERT INTO INDICADORES.VARIABLES_EMPRESA_GERENCIA_HECHOS
           (id_Variable_Empresa_Gerencia, periodo, valor, fecha_Creacion, creado_Por, observaciones_Periodo, validadorDeInsercion)
-        VALUES
+      VALUES 
           (@id_Variable_Empresa_Gerencia, @p, @valor, GETDATE(), @creado_Por, @observaciones_Periodo, @validadorDeInsercion);
       END;
 
@@ -228,13 +228,13 @@ export async function POST(req: NextRequest) {
     let insertedRows: any[] = []
     try {
       insertedRows = await executeQuery(upsertQuery, {
-        id_Variable_Empresa_Gerencia,
-        periodo,
-        valor,
-        creado_Por,
-        observaciones_Periodo: observaciones_Periodo || null,
-        validadorDeInsercion: validadorDeInsercion || null
-      })
+      id_Variable_Empresa_Gerencia,
+      periodo,
+      valor,
+      creado_Por,
+      observaciones_Periodo: observaciones_Periodo || null,
+      validadorDeInsercion: validadorDeInsercion || null
+    })
     } catch (sqlError) {
       let msg = 'Error creando/actualizando variable';
       if (sqlError.message && sqlError.message.match(/duplicate|unique|constraint/gi)) {
@@ -257,9 +257,9 @@ export async function POST(req: NextRequest) {
     })
   } catch (error: any) {
     console.error('❌ Error creando variable POST:', error)
-    return NextResponse.json({
-      success: false,
-      message: 'Error creando variable',
+    return NextResponse.json({ 
+      success: false, 
+      message: 'Error creando variable', 
       error: error.message || String(error)
     }, { status: 500 })
   }

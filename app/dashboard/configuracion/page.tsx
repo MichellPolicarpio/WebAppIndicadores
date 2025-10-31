@@ -235,17 +235,20 @@ export default function ConfiguracionPage() {
                   />
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="gerencia" className="text-gray-700">
-                    Gerencia
-                  </Label>
-                  <Input
-                    id="gerencia"
-                    value={formData.gerencia}
-                    disabled
-                    className="bg-gray-100 border-gray-300 text-gray-500"
-                  />
-                </div>
+                {/* Solo mostrar gerencia si NO es admin */}
+                {user.rolUsuario !== 1 && (
+                  <div className="space-y-2">
+                    <Label htmlFor="gerencia" className="text-gray-700">
+                      Gerencia
+                    </Label>
+                    <Input
+                      id="gerencia"
+                      value={formData.gerencia}
+                      disabled
+                      className="bg-gray-100 border-gray-300 text-gray-500"
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="flex justify-end pt-4">
@@ -287,10 +290,13 @@ export default function ConfiguracionPage() {
                   <Input value={user.company} disabled className="bg-gray-100 border-gray-300 text-gray-500" />
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-gray-700">Gerencia</Label>
-                  <Input value={user.gerencia} disabled className="bg-gray-100 border-gray-300 text-gray-500" />
-                </div>
+                {/* Solo mostrar gerencia si NO es admin */}
+                {user.rolUsuario !== 1 && (
+                  <div className="space-y-2">
+                    <Label className="text-gray-700">Gerencia</Label>
+                    <Input value={user.gerencia} disabled className="bg-gray-100 border-gray-300 text-gray-500" />
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label className="text-gray-700">Ubicación</Label>

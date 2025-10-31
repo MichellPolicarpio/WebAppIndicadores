@@ -58,13 +58,13 @@ export async function getConnection(): Promise<any> {
       pool = new sql.ConnectionPool(dbConfig)
       await pool.connect()
       console.log('✅ Conexión a SQL Server establecida correctamente')
-
+      
       // FIX: Proteger pool.on - solo si pool existe y tiene método 'on'
       if (pool && typeof pool.on === 'function') {
-        pool.on('error', (err: any) => {
-          console.error('❌ Error en el pool de SQL Server:', err)
-          pool = null
-        })
+      pool.on('error', (err: any) => {
+        console.error('❌ Error en el pool de SQL Server:', err)
+        pool = null
+      })
       }
     }
     return pool

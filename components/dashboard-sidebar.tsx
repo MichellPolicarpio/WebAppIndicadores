@@ -1,7 +1,7 @@
 "use client"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { Home, PlusCircle, Settings, Menu, ChevronLeft, BarChart3, Building2, Target } from "lucide-react"
+import { Home, PlusCircle, Settings, Menu, ChevronLeft, BarChart3, Building2, Target, Shield } from "lucide-react"
 import Image from "next/image"
 import type { User } from "@/lib/auth"
 import { cn } from "@/lib/utils"
@@ -40,6 +40,12 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
       icon: Target,
       href: "/dashboard/indicadores/objetivo",
     },
+    // Mostrar Panel Admin solo si el usuario es administrador (rolUsuario === 1)
+    ...(user.rolUsuario === 1 ? [{
+      label: "Panel Admin",
+      icon: Shield,
+      href: "/dashboard/admin",
+    }] : []),
     {
       label: "Configuración",
       icon: Settings,
@@ -164,7 +170,23 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
         collapsed ? "opacity-0 pointer-events-none" : "opacity-100"
       )}>
         {/* Info de Usuario */}
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg">
+        {user.rolUsuario === 1 ? (
+          // Vista para Administrador
+          <div className="bg-gradient-to-br from-purple-600/20 to-indigo-600/20 backdrop-blur-sm rounded-xl p-4 border border-purple-500/30 shadow-lg">
+            <div className="text-center space-y-3">
+              <div className="flex items-center justify-center gap-2 mb-2">
+                <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center shadow-md">
+                  <Shield className="h-5 w-5 text-white" />
+                </div>
+              </div>
+              <p className="text-xs text-white/60 font-medium uppercase tracking-wider mb-1">Estado</p>
+              <p className="text-sm font-bold text-white leading-relaxed">Es Administrador</p>
+              <p className="text-xs text-white/70 italic">Acceso completo al sistema</p>
+            </div>
+          </div>
+        ) : (
+          // Vista normal para usuarios no-admin
+          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg">
             <div className="space-y-3">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">
@@ -181,6 +203,7 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
               </div>
             </div>
           </div>
+        )}
 
           {/* Logo */}
           <div className="relative flex justify-center bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg overflow-hidden group hover:bg-white/15 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
