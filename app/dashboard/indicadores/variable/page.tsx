@@ -4,7 +4,9 @@ import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar, Eye, ChevronDown, Trash2 } from "lucide-react"
+import { Label } from "@/components/ui/label"
+import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar, Eye, ChevronDown, Trash2, Building2 } from "lucide-react"
+import { getUser, type User } from "@/lib/auth"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -24,7 +26,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 import { toast } from "sonner"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
@@ -38,6 +39,9 @@ interface VariableRow {
   periodo: string
   valor: number
   nombreEmpresaOperadora: string
+  nomGerencia?: string
+  claveEmpresaOperadora?: string
+  observaciones_Periodo?: string | null
 }
 
 interface HistoricoRow {
@@ -51,8 +55,24 @@ interface HistoricoRow {
   observaciones_Periodo: string | null
 }
 
+interface Empresa {
+  idEmpresaOperadora: number
+  claveEmpresaOperadora: string
+  nombreEmpresaOperadora: string
+}
+
+interface Gerencia {
+  id_Empresa_Gerencia: number
+  clave_Empresa_Gerencia: string
+  nomGerencia: string
+  nombreEmpresaOperadora: string
+  claveEmpresaOperadora: string
+}
+
 export default function VariablesPage() {
   const router = useRouter()
+  const [user, setUser] = useState<User | null>(null)
+  const [isAdmin, setIsAdmin] = useState(false)
   const [variables, setVariables] = useState<VariableRow[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState("")
@@ -61,6 +81,14 @@ export default function VariablesPage() {
   const [selectedMonth, setSelectedMonth] = useState<Date>(new Date())
   const [availableMonths, setAvailableMonths] = useState<string[]>([])
   const [availableYears, setAvailableYears] = useState<number[]>([])
+  
+  // Estado para filtros de admin (empresa y gerencia)
+  const [empresas, setEmpresas] = useState<Empresa[]>([])
+  const [gerencias, setGerencias] = useState<Gerencia[]>([])
+  const [selectedEmpresa, setSelectedEmpresa] = useState<string>("")
+  const [selectedGerencia, setSelectedGerencia] = useState<string>("")
+  const [loadingEmpresas, setLoadingEmpresas] = useState(false)
+  const [loadingGerencias, setLoadingGerencias] = useState(false)
   
   // Estado para agregar variable del próximo mes
   const [addNextMonthDialogOpen, setAddNextMonthDialogOpen] = useState(false)
@@ -85,6 +113,24 @@ export default function VariablesPage() {
   // Estado para el siguiente mes (para evitar duplicados al agregar)
   const [nextMonthVariables, setNextMonthVariables] = useState<VariableRow[]>([])
 
+  // Detectar si es admin al cargar
+  useEffect(() => {
+    const currentUser = getUser()
+    if (currentUser) {
+      setUser(currentUser)
+      const userIsAdmin = currentUser.rolUsuario === 1
+      setIsAdmin(userIsAdmin)
+      
+      // Solo cargar empresas si es admin y hay usuario válido
+      if (userIsAdmin && currentUser.id) {
+        console.log('🔍 [Frontend] Usuario admin detectado, cargando empresas...', { id: currentUser.id, rolUsuario: currentUser.rolUsuario })
+        fetchEmpresas()
+      }
+    } else {
+      console.warn('⚠️ [Frontend] No se encontró usuario en localStorage')
+    }
+  }, [])
+
   // Precompute a lookup para el próximo mes: ids de id_Variable_Empresa_Gerencia existentes
   const nextMonthIdSet = useMemo(() => {
     const set = new Set<number>()
@@ -92,12 +138,127 @@ export default function VariablesPage() {
     return set
   }, [nextMonthVariables])
 
+  // Cargar empresas (solo admin)
+  const fetchEmpresas = async () => {
+    // Verificar que el usuario esté disponible antes de hacer la llamada
+    const currentUser = getUser()
+    if (!currentUser || currentUser.rolUsuario !== 1) {
+      console.warn('⚠️ [Frontend] No se puede cargar empresas: usuario no es admin')
+      return
+    }
+    
+    setLoadingEmpresas(true)
+    try {
+      console.log('📡 [Frontend] Llamando API /api/admin/empresas...')
+      const response = await fetch('/api/admin/empresas', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include'
+      })
+      
+      console.log('📥 [Frontend] Respuesta recibida:', { status: response.status, ok: response.ok })
+      
+      const result = await response.json()
+      console.log('📥 [Frontend] Resultado parseado:', result)
+      
+      if (!response.ok || !result.success) {
+        console.error('❌ [Frontend] Error cargando empresas:', result.message)
+        toast.error(result.message || 'Error al cargar empresas')
+        return
+      }
+      
+      if (result.empresas) {
+        console.log('✅ [Frontend] Empresas cargadas:', result.empresas.length)
+        setEmpresas(result.empresas)
+      }
+    } catch (error: any) {
+      console.error('❌ [Frontend] Error en fetch de empresas:', error)
+      toast.error('Error al cargar empresas: ' + (error.message || 'Error desconocido'))
+    } finally {
+      setLoadingEmpresas(false)
+    }
+  }
+
+  // Cargar gerencias según empresa seleccionada (solo admin)
+  const fetchGerencias = async (empresaId: string) => {
+    if (!empresaId) {
+      setGerencias([])
+      setSelectedGerencia("")
+      return
+    }
+    
+    setLoadingGerencias(true)
+    try {
+      const response = await fetch(`/api/admin/gerencias?empresaId=${empresaId}`, {
+        credentials: 'include'
+      })
+      const result = await response.json()
+      
+      if (!response.ok || !result.success) {
+        console.error('Error cargando gerencias:', result.message)
+        toast.error(result.message || 'Error al cargar gerencias')
+        return
+      }
+      
+      if (result.gerencias) {
+        setGerencias(result.gerencias)
+        // Si había una gerencia seleccionada pero no está en la nueva lista, limpiarla
+        if (selectedGerencia) {
+          const gerenciaExiste = result.gerencias.some((g: Gerencia) => 
+            g.id_Empresa_Gerencia.toString() === selectedGerencia
+          )
+          if (!gerenciaExiste) {
+            setSelectedGerencia("")
+          }
+        }
+      }
+    } catch (error: any) {
+      console.error('Error cargando gerencias:', error)
+      toast.error('Error al cargar gerencias')
+    } finally {
+      setLoadingGerencias(false)
+    }
+  }
+
+  // Efecto cuando cambia la empresa seleccionada
   useEffect(() => {
+    if (isAdmin && selectedEmpresa) {
+      fetchGerencias(selectedEmpresa)
+    } else if (isAdmin && !selectedEmpresa) {
+      setGerencias([])
+      setSelectedGerencia("")
+    }
+  }, [selectedEmpresa, isAdmin])
+
+  // Efecto cuando cambian los filtros o el mes
+  useEffect(() => {
+    // No ejecutar fetchVariables si es admin y no tiene gerencia seleccionada
+    if (isAdmin && !selectedGerencia) {
+      // Admin sin gerencia: limpiar variables y no hacer fetch
+      setVariables([])
+      setAvailableMonths([])
+      setError("")
+      return
+    }
+    
+    // Solo hacer fetch si es usuario normal o admin con gerencia seleccionada
     fetchVariables()
     fetchNextMonthVariables()
-  }, [selectedMonth])
+  }, [selectedMonth, selectedGerencia, isAdmin])
 
   const fetchVariables = async (dateOverride?: Date) => {
+    // Validación temprana: si es admin sin gerencia, no hacer nada
+    if (isAdmin && !selectedGerencia) {
+      console.log('⏭️ [Frontend] Admin sin gerencia seleccionada, saltando fetchVariables')
+      setVariables([])
+      setAvailableMonths([])
+      setError("")
+      setIsLoading(false)
+      return
+    }
+    
     try {
       setIsLoading(true)
       setError("")
@@ -108,11 +269,45 @@ export default function VariablesPage() {
       const month = baseDate.getMonth() + 1
       const monthStr = `${year}-${month.toString().padStart(2, '0')}-01`
       
-      const res = await fetch(`/api/variables?month=${monthStr}`, { cache: 'no-store' })
+      let res: Response
+      
+      console.log('📡 [Frontend] fetchVariables:', { isAdmin, selectedGerencia, year, month })
+      
+      // Si es admin y tiene gerencia seleccionada, usar API de admin
+      if (isAdmin && selectedGerencia) {
+        res = await fetch(`/api/admin/variables?empresaGerencia=${selectedGerencia}&year=${year}&month=${month}`, { 
+          cache: 'no-store',
+          credentials: 'include'
+        })
+      } else if (!isAdmin) {
+        // Usuario normal: usar API normal
+        res = await fetch(`/api/variables?month=${monthStr}`, { 
+          cache: 'no-store',
+          credentials: 'include'
+        })
+      } else {
+        // Admin sin gerencia seleccionada: no cargar datos
+        setVariables([])
+        setAvailableMonths([])
+        setIsLoading(false)
+        return
+      }
+      
       const json = await res.json()
       console.log('Respuesta del API:', json)
+      
+      if (!res.ok) {
+        console.error('❌ Error en respuesta del servidor:', json)
+        setError(json.message || json.error || 'Error desconocido')
+        toast.error(json.message || 'Error al cargar indicadores')
+        setVariables([])
+        setAvailableMonths([])
+        return
+      }
+      
       if (!json.success) {
         setError(json.error || json.message || 'Error desconocido')
+        toast.error(json.message || 'Error al cargar indicadores')
         setVariables([])
         setAvailableMonths([])
         return
@@ -140,7 +335,21 @@ export default function VariablesPage() {
       const year = nextMonthDate.getFullYear()
       const month = nextMonthDate.getMonth() + 1
       const monthStr = `${year}-${month.toString().padStart(2, '0')}-01`
-      const res = await fetch(`/api/variables?month=${monthStr}`, { cache: 'no-store' })
+      
+      let res: Response
+      
+      // Si es admin y tiene gerencia seleccionada, usar API de admin
+      if (isAdmin && selectedGerencia) {
+        res = await fetch(`/api/admin/variables?empresaGerencia=${selectedGerencia}&year=${year}&month=${month}`, { cache: 'no-store' })
+      } else if (!isAdmin) {
+        // Usuario normal: usar API normal
+        res = await fetch(`/api/variables?month=${monthStr}`, { cache: 'no-store' })
+      } else {
+        // Admin sin gerencia seleccionada: no cargar datos del próximo mes
+        setNextMonthVariables([])
+        return
+      }
+      
       const json = await res.json()
       if (!json.success) {
         setNextMonthVariables([])
@@ -482,12 +691,103 @@ export default function VariablesPage() {
         </div>
       )}
 
+      {/* Filtros de Admin (Empresa y Gerencia) */}
+      {isAdmin && (
+        <Card className="border-gray-200 bg-white shadow-md">
+          <CardHeader className="border-b border-gray-200 bg-white pb-4">
+            <CardTitle className="text-lg text-gray-900 flex items-center gap-2">
+              <Building2 className="h-5 w-5 text-blue-600" />
+              Filtros de Visualización (Admin)
+            </CardTitle>
+            <CardDescription className="text-sm text-gray-600 mt-1">
+              Selecciona empresa y gerencia para visualizar indicadores
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="p-6 pt-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="empresa-filter">Empresa</Label>
+                <Select
+                  value={selectedEmpresa}
+                  onValueChange={(value) => {
+                    setSelectedEmpresa(value)
+                    setSelectedGerencia("") // Limpiar gerencia al cambiar empresa
+                  }}
+                  disabled={loadingEmpresas}
+                >
+                  <SelectTrigger id="empresa-filter">
+                    <SelectValue placeholder={loadingEmpresas ? "Cargando..." : "Seleccionar empresa"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {empresas.map((empresa) => (
+                      <SelectItem key={empresa.idEmpresaOperadora} value={empresa.idEmpresaOperadora.toString()}>
+                        {empresa.nombreEmpresaOperadora} ({empresa.claveEmpresaOperadora})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="gerencia-filter">Gerencia</Label>
+                <Select
+                  value={selectedGerencia}
+                  onValueChange={setSelectedGerencia}
+                  disabled={!selectedEmpresa || loadingGerencias}
+                >
+                  <SelectTrigger id="gerencia-filter">
+                    <SelectValue 
+                      placeholder={
+                        !selectedEmpresa 
+                          ? "Primero selecciona una empresa" 
+                          : loadingGerencias 
+                          ? "Cargando..." 
+                          : "Seleccionar gerencia"
+                      } 
+                    />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {gerencias.map((gerencia) => (
+                      <SelectItem key={gerencia.id_Empresa_Gerencia} value={gerencia.id_Empresa_Gerencia.toString()}>
+                        {gerencia.nomGerencia}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {selectedEmpresa && selectedGerencia && (
+              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-700">
+                  <span className="font-semibold">Visualizando:</span> {
+                    gerencias.find(g => g.id_Empresa_Gerencia.toString() === selectedGerencia)?.nomGerencia
+                  } - {
+                    empresas.find(e => e.idEmpresaOperadora.toString() === selectedEmpresa)?.nombreEmpresaOperadora
+                  }
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
       {isLoading ? (
         <Card className="border-gray-200 bg-white shadow-md">
           <CardContent className="py-20">
             <div className="flex flex-col items-center justify-center gap-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               <p className="text-lg text-gray-600">Cargando indicadores mensuales...</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : isAdmin && !selectedGerencia ? (
+        <Card className="border-gray-200 bg-white shadow-md">
+          <CardContent className="py-20">
+            <div className="flex flex-col items-center justify-center gap-4 text-gray-500">
+              <Building2 className="h-16 w-16 opacity-50" />
+              <p className="text-lg font-medium">Selecciona empresa y gerencia para ver los indicadores</p>
+              <p className="text-sm">Los filtros están disponibles arriba</p>
             </div>
           </CardContent>
         </Card>
