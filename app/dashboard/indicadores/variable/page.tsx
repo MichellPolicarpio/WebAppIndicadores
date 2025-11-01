@@ -833,22 +833,22 @@ export default function VariablesPage() {
       )}
 
 
-      {isLoading ? (
+      {isAdmin && !selectedGerencia ? (
+        <Card className="border-gray-200 bg-white shadow-md">
+          <CardContent className="py-20">
+            <div className="flex flex-col items-center justify-center gap-4 text-gray-500">
+              <Building2 className="h-16 w-16 opacity-50" />
+              <p className="text-lg font-medium">Seleccione filtros para mostrar datos</p>
+              <p className="text-sm">Selecciona empresa y gerencia en los filtros de arriba</p>
+            </div>
+          </CardContent>
+        </Card>
+      ) : isLoading ? (
         <Card className="border-gray-200 bg-white shadow-md">
           <CardContent className="py-20">
             <div className="flex flex-col items-center justify-center gap-4">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
               <p className="text-lg text-gray-600">Cargando indicadores mensuales...</p>
-            </div>
-          </CardContent>
-        </Card>
-      ) : isAdmin && !selectedGerencia ? (
-        <Card className="border-gray-200 bg-white shadow-md">
-          <CardContent className="py-20">
-            <div className="flex flex-col items-center justify-center gap-4 text-gray-500">
-              <Building2 className="h-16 w-16 opacity-50" />
-              <p className="text-lg font-medium">Selecciona empresa y gerencia para ver los indicadores</p>
-              <p className="text-sm">Los filtros están disponibles arriba</p>
             </div>
           </CardContent>
         </Card>
