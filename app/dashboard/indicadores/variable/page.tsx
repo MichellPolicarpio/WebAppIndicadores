@@ -2,10 +2,11 @@
 
 import { useEffect, useState, useMemo } from "react"
 import { useRouter } from "next/navigation"
+import * as XLSX from 'xlsx'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar, Eye, ChevronDown, Trash2, Building2 } from "lucide-react"
+import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar, Eye, ChevronDown, Trash2, Building2, FileSpreadsheet } from "lucide-react"
 import { getUser, type User } from "@/lib/auth"
 import {
   AlertDialog,
@@ -234,6 +235,11 @@ export default function VariablesPage() {
 
   // Efecto cuando cambian los filtros o el mes
   useEffect(() => {
+    // No ejecutar si aún no sabemos si es admin (user no está cargado)
+    if (!user) {
+      return
+    }
+    
     // No ejecutar fetchVariables si es admin y no tiene gerencia seleccionada
     if (isAdmin && !selectedGerencia) {
       // Admin sin gerencia: limpiar variables y no hacer fetch
@@ -246,9 +252,15 @@ export default function VariablesPage() {
     // Solo hacer fetch si es usuario normal o admin con gerencia seleccionada
     fetchVariables()
     fetchNextMonthVariables()
-  }, [selectedMonth, selectedGerencia, isAdmin])
+  }, [selectedMonth, selectedGerencia, isAdmin, user])
 
   const fetchVariables = async (dateOverride?: Date) => {
+    // Validación temprana: no hacer nada si el usuario no está cargado
+    if (!user) {
+      console.log('⏭️ [Frontend] Usuario no cargado aún, saltando fetchVariables')
+      return
+    }
+    
     // Validación temprana: si es admin sin gerencia, no hacer nada
     if (isAdmin && !selectedGerencia) {
       console.log('⏭️ [Frontend] Admin sin gerencia seleccionada, saltando fetchVariables')
@@ -328,6 +340,17 @@ export default function VariablesPage() {
   }
 
   const fetchNextMonthVariables = async () => {
+    // Validación temprana: no hacer nada si el usuario no está cargado
+    if (!user) {
+      return
+    }
+    
+    // Validación temprana: si es admin sin gerencia, no hacer nada
+    if (isAdmin && !selectedGerencia) {
+      setNextMonthVariables([])
+      return
+    }
+    
     try {
       // Calcular el próximo mes basado en selectedMonth
       const nextMonthDate = new Date(selectedMonth)
@@ -340,10 +363,16 @@ export default function VariablesPage() {
       
       // Si es admin y tiene gerencia seleccionada, usar API de admin
       if (isAdmin && selectedGerencia) {
-        res = await fetch(`/api/admin/variables?empresaGerencia=${selectedGerencia}&year=${year}&month=${month}`, { cache: 'no-store' })
+        res = await fetch(`/api/admin/variables?empresaGerencia=${selectedGerencia}&year=${year}&month=${month}`, { 
+          cache: 'no-store',
+          credentials: 'include'
+        })
       } else if (!isAdmin) {
         // Usuario normal: usar API normal
-        res = await fetch(`/api/variables?month=${monthStr}`, { cache: 'no-store' })
+        res = await fetch(`/api/variables?month=${monthStr}`, { 
+          cache: 'no-store',
+          credentials: 'include'
+        })
       } else {
         // Admin sin gerencia seleccionada: no cargar datos del próximo mes
         setNextMonthVariables([])
@@ -574,6 +603,52 @@ export default function VariablesPage() {
     }
   }
 
+  // ==================== EXPORTAR A EXCEL ====================
+  const handleExportToExcel = () => {
+    try {
+      // Preparar los datos para Excel
+      const excelData = variables.map((variable, index) => ({
+        '#': index + 1,
+        'Indicador': variable.nombreVariable,
+        'Valor': variable.valor !== null && variable.valor !== undefined ? variable.valor : '-',
+        'Observaciones': variable.observaciones_Periodo || '-',
+        ...(isAdmin && selectedGerencia ? {
+          'Empresa': variable.nombreEmpresaOperadora || '-',
+          'Gerencia': variable.nomGerencia || '-'
+        } : {})
+      }))
+
+      // Crear workbook y worksheet
+      const ws = XLSX.utils.json_to_sheet(excelData)
+      const wb = XLSX.utils.book_new()
+      XLSX.utils.book_append_sheet(wb, ws, 'Indicadores')
+
+      // Ajustar ancho de columnas
+      const colWidths = [
+        { wch: 5 },  // #
+        { wch: 35 }, // Indicador
+        { wch: 12 }, // Valor
+        { wch: 40 }, // Observaciones
+        ...(isAdmin && selectedGerencia ? [
+          { wch: 25 }, // Empresa
+          { wch: 25 }  // Gerencia
+        ] : [])
+      ]
+      ws['!cols'] = colWidths
+
+      // Generar nombre del archivo
+      const monthYear = getMonthYear(selectedMonth)
+      const fileName = `Indicadores_Mensuales_${monthYear.replace(/\s+/g, '_')}.xlsx`
+
+      // Descargar el archivo
+      XLSX.writeFile(wb, fileName)
+      toast.success('Archivo Excel generado exitosamente')
+    } catch (error: any) {
+      console.error('Error al exportar a Excel:', error)
+      toast.error('Error al generar el archivo Excel')
+    }
+  }
+
   return (
     <div className="space-y-2 sm:space-y-3 w-full mx-auto px-3 sm:px-4 lg:px-6 max-w-7xl">
       {/* Header Section */}
@@ -586,101 +661,167 @@ export default function VariablesPage() {
 
 
       {/* Selector de Mes */}
-      <Card className="border-gray-200 bg-white shadow-md">
-        <CardContent className="p-2 sm:p-3">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-1.5 mb-3">
-            <div>
-              <h2 className="text-sm sm:text-base font-bold text-gray-900 flex items-center gap-1.5">
-                <Calendar className="h-3.5 w-3.5 text-blue-600" />
-                Seleccionar Período
-              </h2>
-            </div>
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-semibold text-gray-700">Año:</label>
-              <Select 
-                value={selectedMonth.getFullYear().toString()} 
-                onValueChange={(value) => selectYear(parseInt(value))}
-              >
-                <SelectTrigger className="w-24 h-8 text-xs border-gray-300 focus:border-blue-500 focus:ring-blue-500">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {availableYears.map((year) => (
-                    <SelectItem key={year} value={year.toString()} className="text-xs">
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {/* Navegación de meses */}
+      <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-2.5">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2.5">
           <div className="flex items-center gap-1.5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigateMonth('prev')}
-              className="border border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 flex-shrink-0 h-8 w-8 p-0 rounded-lg shadow-sm transition-all"
+            <Calendar className="h-3.5 w-3.5 text-blue-600" />
+            <span className="text-xs font-medium text-gray-700">Período:</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <label className="text-xs text-gray-600">Año</label>
+            <Select 
+              value={selectedMonth.getFullYear().toString()} 
+              onValueChange={(value) => selectYear(parseInt(value))}
             >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
-            
-            {/* Container de meses con grid responsive */}
-            <div className="flex-1">
-              <div className="grid grid-cols-6 xl:grid-cols-12 gap-1 bg-gradient-to-r from-gray-100 to-gray-50 rounded-lg p-1.5 shadow-inner">
-                {Array.from({ length: 12 }, (_, i) => {
-                  const monthDate = new Date(selectedMonth.getFullYear(), i, 1)
-                  const isSelected = selectedMonth.getMonth() === i
-                  const hasData = availableMonths.some(period => {
-                    const periodDate = new Date(period)
-                    return periodDate.getMonth() === i && periodDate.getFullYear() === selectedMonth.getFullYear()
-                  })
-                  
-                  return (
-                    <button
-                      key={i}
-                      onClick={() => selectMonth(i)}
-                      className={`px-2 py-1.5 text-xs sm:text-sm font-bold rounded-md transition-all duration-200 whitespace-nowrap ${
-                        isSelected
-                          ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg'
-                          : hasData
-                          ? 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700 shadow-sm'
-                          : 'bg-gray-200 text-gray-400 hover:bg-gray-300 hover:text-gray-500'
-                      }`}
-                    >
-                      {getMonthName(monthDate)}
-                    </button>
-                  )
-                })}
-              </div>
+              <SelectTrigger className="w-20 h-7 text-xs px-2 rounded-md">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {availableYears.map((year) => (
+                  <SelectItem key={year} value={year.toString()} className="text-xs">
+                    {year}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+        
+        {/* Navegación de meses */}
+        <div className="flex items-center gap-1.5">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigateMonth('prev')}
+            className="border border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 flex-shrink-0 h-7 w-7 p-0 rounded-md shadow-sm transition-all"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+          </Button>
+          
+          {/* Container de meses con grid responsive */}
+          <div className="flex-1">
+            <div className="grid grid-cols-6 xl:grid-cols-12 gap-1 bg-gradient-to-r from-gray-100 to-gray-50 rounded-lg p-1.5 shadow-inner">
+              {Array.from({ length: 12 }, (_, i) => {
+                const monthDate = new Date(selectedMonth.getFullYear(), i, 1)
+                const isSelected = selectedMonth.getMonth() === i
+                const hasData = availableMonths.some(period => {
+                  const periodDate = new Date(period)
+                  return periodDate.getMonth() === i && periodDate.getFullYear() === selectedMonth.getFullYear()
+                })
+                
+                return (
+                  <button
+                    key={i}
+                    onClick={() => selectMonth(i)}
+                    className={`px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 whitespace-nowrap ${
+                      isSelected
+                        ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg'
+                        : hasData
+                        ? 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700 shadow-sm'
+                        : 'bg-gray-200 text-gray-400 hover:bg-gray-300 hover:text-gray-500'
+                    }`}
+                  >
+                    {getMonthName(monthDate)}
+                  </button>
+                )
+              })}
             </div>
-            
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigateMonth('next')}
-              className="border border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 flex-shrink-0 h-8 w-8 p-0 rounded-lg shadow-sm transition-all"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Button>
           </div>
           
-          {/* Información del período seleccionado */}
-          <div className="mt-2 pt-2 border-t border-gray-200">
-            <div className="flex items-center justify-center">
-              <div className="flex items-center gap-1.5 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 px-3 py-1 rounded-lg shadow-sm">
-                <Calendar className="h-3.5 w-3.5 text-blue-600" />
-                <div className="text-center sm:text-left">
-                  <div className="text-xs text-blue-600 font-semibold">
-                    Visualizando: <span className="font-bold text-blue-800">{getMonthYear(selectedMonth)}</span>
-                  </div>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigateMonth('next')}
+            className="border border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 flex-shrink-0 h-7 w-7 p-0 rounded-md shadow-sm transition-all"
+          >
+            <ChevronRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+        
+        {/* Filtros de Admin (solo si es admin) */}
+        {isAdmin && (
+          <div className="pt-2.5 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2.5">
+              {/* Icono y título compacto */}
+              <div className="flex items-center gap-1.5 flex-shrink-0">
+                <Building2 className="h-3.5 w-3.5 text-gray-600" />
+                <span className="text-xs font-medium text-gray-700">Filtros:</span>
+              </div>
+              
+              {/* Filtros en línea horizontal */}
+              <div className="flex-1 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  <Label htmlFor="empresa-filter" className="text-xs text-gray-600 whitespace-nowrap">Empresa</Label>
+                  <Select
+                    value={selectedEmpresa}
+                    onValueChange={(value) => {
+                      setSelectedEmpresa(value)
+                      setSelectedGerencia("")
+                    }}
+                    disabled={loadingEmpresas}
+                  >
+                    <SelectTrigger id="empresa-filter" className="h-7 text-xs px-2 rounded-md">
+                      <SelectValue placeholder={loadingEmpresas ? "..." : "Seleccionar"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {empresas.map((empresa) => (
+                        <SelectItem key={empresa.idEmpresaOperadora} value={empresa.idEmpresaOperadora.toString()}>
+                          {empresa.nombreEmpresaOperadora} ({empresa.claveEmpresaOperadora})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="flex items-center gap-1.5 min-w-0 flex-1">
+                  <Label htmlFor="gerencia-filter" className="text-xs text-gray-600 whitespace-nowrap">Gerencia</Label>
+                  <Select
+                    value={selectedGerencia}
+                    onValueChange={setSelectedGerencia}
+                    disabled={!selectedEmpresa || loadingGerencias}
+                  >
+                    <SelectTrigger id="gerencia-filter" className="h-7 text-xs px-2 rounded-md">
+                      <SelectValue 
+                        placeholder={
+                          !selectedEmpresa 
+                            ? "Selecciona empresa" 
+                            : loadingGerencias 
+                            ? "..." 
+                            : "Seleccionar"
+                        } 
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {gerencias.map((gerencia) => (
+                        <SelectItem key={gerencia.id_Empresa_Gerencia} value={gerencia.id_Empresa_Gerencia.toString()}>
+                          {gerencia.nomGerencia}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
+
+              {/* Indicador de visualización compacto */}
+              {selectedEmpresa && selectedGerencia && (
+                <div className="flex items-center gap-1.5 px-2 py-1 bg-gray-50 border border-gray-200 rounded-md text-xs text-gray-600 flex-shrink-0 max-w-[180px] truncate shadow-sm">
+                  {gerencias.find(g => g.id_Empresa_Gerencia.toString() === selectedGerencia)?.nomGerencia} - {empresas.find(e => e.idEmpresaOperadora.toString() === selectedEmpresa)?.claveEmpresaOperadora}
+                </div>
+              )}
             </div>
           </div>
-        </CardContent>
-      </Card>
+        )}
+
+        {/* Información del período seleccionado */}
+        <div className={`${isAdmin ? 'mt-2.5' : 'mt-2'} pt-2 border-t border-gray-200`}>
+          <div className="flex items-center justify-center">
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 rounded-md text-xs text-blue-700 shadow-sm">
+              <Calendar className="h-3.5 w-3.5 text-blue-600" />
+              <span className="font-semibold">{getMonthYear(selectedMonth)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {error && (
         <div className="bg-red-50 border-l-4 border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-sm">
@@ -691,86 +832,6 @@ export default function VariablesPage() {
         </div>
       )}
 
-      {/* Filtros de Admin (Empresa y Gerencia) */}
-      {isAdmin && (
-        <Card className="border-gray-200 bg-white shadow-md">
-          <CardHeader className="border-b border-gray-200 bg-white pb-4">
-            <CardTitle className="text-lg text-gray-900 flex items-center gap-2">
-              <Building2 className="h-5 w-5 text-blue-600" />
-              Filtros de Visualización (Admin)
-            </CardTitle>
-            <CardDescription className="text-sm text-gray-600 mt-1">
-              Selecciona empresa y gerencia para visualizar indicadores
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="p-6 pt-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="empresa-filter">Empresa</Label>
-                <Select
-                  value={selectedEmpresa}
-                  onValueChange={(value) => {
-                    setSelectedEmpresa(value)
-                    setSelectedGerencia("") // Limpiar gerencia al cambiar empresa
-                  }}
-                  disabled={loadingEmpresas}
-                >
-                  <SelectTrigger id="empresa-filter">
-                    <SelectValue placeholder={loadingEmpresas ? "Cargando..." : "Seleccionar empresa"} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {empresas.map((empresa) => (
-                      <SelectItem key={empresa.idEmpresaOperadora} value={empresa.idEmpresaOperadora.toString()}>
-                        {empresa.nombreEmpresaOperadora} ({empresa.claveEmpresaOperadora})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="gerencia-filter">Gerencia</Label>
-                <Select
-                  value={selectedGerencia}
-                  onValueChange={setSelectedGerencia}
-                  disabled={!selectedEmpresa || loadingGerencias}
-                >
-                  <SelectTrigger id="gerencia-filter">
-                    <SelectValue 
-                      placeholder={
-                        !selectedEmpresa 
-                          ? "Primero selecciona una empresa" 
-                          : loadingGerencias 
-                          ? "Cargando..." 
-                          : "Seleccionar gerencia"
-                      } 
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {gerencias.map((gerencia) => (
-                      <SelectItem key={gerencia.id_Empresa_Gerencia} value={gerencia.id_Empresa_Gerencia.toString()}>
-                        {gerencia.nomGerencia}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            {selectedEmpresa && selectedGerencia && (
-              <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-700">
-                  <span className="font-semibold">Visualizando:</span> {
-                    gerencias.find(g => g.id_Empresa_Gerencia.toString() === selectedGerencia)?.nomGerencia
-                  } - {
-                    empresas.find(e => e.idEmpresaOperadora.toString() === selectedEmpresa)?.nombreEmpresaOperadora
-                  }
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {isLoading ? (
         <Card className="border-gray-200 bg-white shadow-md">
@@ -805,7 +866,7 @@ export default function VariablesPage() {
         <Card className="border-gray-200 bg-white shadow-md">
           <CardHeader className="border-b border-gray-200 bg-white">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-              <div>
+              <div className="flex-1">
                 <CardTitle className="text-xl sm:text-2xl text-gray-900">
                   Indicadores Mensuales del Período
                 </CardTitle>
@@ -813,8 +874,28 @@ export default function VariablesPage() {
                   {variables.length}/18 indicador{variables.length !== 1 ? 'es' : ''} • {getMonthYear(selectedMonth)}
                 </CardDescription>
               </div>
-              <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold">
-                {variables.length} Registro{variables.length !== 1 ? 's' : ''}
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportToExcel}
+                  className="h-8 px-4 text-xs border-green-600 text-green-700 hover:bg-green-50 hover:border-green-700 bg-white flex items-center gap-2"
+                >
+                  <svg 
+                    className="h-4 w-4" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <rect x="3" y="3" width="18" height="18" rx="2" fill="#217346" />
+                    <path d="M8 7V17M12 7V17M16 7V17" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                    <path d="M8 7H16M8 11H16M8 15H16" stroke="white" strokeWidth="1.5" strokeLinecap="round" />
+                  </svg>
+                  Exportar Excel
+                </Button>
+                <div className="bg-gray-100 text-gray-700 px-4 py-2 rounded-full text-sm font-semibold">
+                  {variables.length} Registro{variables.length !== 1 ? 's' : ''}
+                </div>
               </div>
             </div>
           </CardHeader>
