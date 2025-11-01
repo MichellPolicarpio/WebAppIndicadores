@@ -585,17 +585,29 @@ export default function VariablesPage() {
     setLoadingHistory(true)
 
     try {
+      console.log('🔍 [Frontend Histórico] Solicitando histórico para:', { idVariableEmpresaGerencia, nombreVariable })
+      
       const res = await fetch(`/api/variables/historico/${idVariableEmpresaGerencia}`, {
-        cache: 'no-store'
+        cache: 'no-store',
+        credentials: 'include'
       })
+      
+      console.log('📡 [Frontend Histórico] Respuesta status:', res.status)
+      
       const json = await res.json()
+      
+      console.log('📦 [Frontend Histórico] JSON recibido:', { success: json.success, dataLength: json.data?.length || 0, message: json.message })
 
       if (!json.success) {
         throw new Error(json.message || 'Error al cargar histórico')
       }
 
-      setHistorico(json.data || [])
+      const historicoData = json.data || []
+      console.log('✅ [Frontend Histórico] Datos finales:', historicoData.length, 'registros')
+      
+      setHistorico(historicoData)
     } catch (e: any) {
+      console.error('❌ [Frontend Histórico] Error:', e)
       toast.error(e.message || 'Error al cargar el histórico')
       setHistorico([])
     } finally {
