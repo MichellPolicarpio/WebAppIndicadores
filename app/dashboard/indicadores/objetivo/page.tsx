@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Plus, Target, Pencil, Check, X, History, Trash2, AlertCircle, Calendar, BarChart3, Edit3, ChevronLeft, ChevronRight, Building2 } from "lucide-react"
+import { ArrowLeft, Plus, Target, Pencil, Check, X, History, Trash2, AlertCircle, Calendar, BarChart3, Edit3, ChevronLeft, ChevronRight, Building2, Save } from "lucide-react"
 import { getUser, type User } from "@/lib/auth"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -1284,154 +1284,239 @@ export default function AgregarObjetivoPage() {
 
       {/* Modal para agregar variable */}
       <Dialog open={addVariableDialogOpen} onOpenChange={setAddVariableDialogOpen}>
-        <DialogContent className="max-w-4xl max-h-[85vh]">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-xl">
-              <Plus className="h-5 w-5 text-blue-600" />
-              Agregar Nueva Variable
-            </DialogTitle>
-            <DialogDescription>
-              Selecciona una variable disponible y completa los valores mensuales
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="space-y-4">
-              <>
-                {/* Selectores en línea */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Selector de año */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Año</Label>
-                  <Select value={selectedYearForNewVariable} onValueChange={(v) => setSelectedYearForNewVariable(v)}>
-                      <SelectTrigger className="w-full">
-                      <SelectValue placeholder="Selecciona un año..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                      {allYears.map((year) => (
-                          <SelectItem key={year} value={year.toString()}>
-                            <div className="flex items-center gap-2">
-                              <span className="font-medium">{year}</span>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+        <DialogContent className="max-w-5xl max-h-[90vh] overflow-hidden flex flex-col p-0">
+          {/* Header mejorado */}
+          <div className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-blue-600 px-6 py-5">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/90 via-blue-500/90 to-blue-600/90" />
+            <DialogHeader className="relative z-10">
+              <DialogTitle className="flex items-center gap-3 text-2xl font-bold text-white">
+                <div className="p-2.5 bg-white/20 backdrop-blur-sm rounded-xl">
+                  <Plus className="h-6 w-6 text-white" />
+                </div>
+                <span>Agregar Nueva Variable</span>
+              </DialogTitle>
+              <DialogDescription className="text-blue-100 text-sm mt-2">
+                Selecciona una variable disponible y completa los valores mensuales del objetivo
+              </DialogDescription>
+            </DialogHeader>
+          </div>
 
-                  {/* Selector de variable */}
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium">Variable</Label>
-                  <Select value={newVariableName} onValueChange={(value) => { selectPreloadedVariable(value) }}>
-                  <SelectTrigger className="w-full">
-                      <SelectValue placeholder={loadingExistingForYear ? 'Cargando...' : 'Variable...'} />
+          {/* Contenido del formulario */}
+          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-6 bg-gradient-to-b from-gray-50 to-white">
+            {/* Selectores */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+              {/* Selector de año */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <Calendar className="h-4 w-4 text-blue-600" />
+                  Año
+                </Label>
+                <Select value={selectedYearForNewVariable} onValueChange={(v) => setSelectedYearForNewVariable(v)}>
+                  <SelectTrigger className="w-full h-11 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 bg-white hover:border-gray-300 transition-all">
+                    <SelectValue placeholder="Selecciona un año..." />
                   </SelectTrigger>
-                  <SelectContent className="max-h-60">
-                      {variablesDisponibles.map((variable, index) => {
-                        const yaRegistrada = existingVariablesForYear.has(variable)
-                        return (
-                          <SelectItem key={index} value={variable} disabled={yaRegistrada}>
-                            <div className="flex items-center gap-2">
-                              <span className={`font-medium ${yaRegistrada ? 'text-gray-400' : ''}`}>{variable}</span>
-                              {yaRegistrada && (
-                                <span className="text-xs text-red-500">(Ya registrada para este año)</span>
-                              )}
-                            </div>
+                  <SelectContent>
+                    {allYears.map((year) => (
+                      <SelectItem key={year} value={year.toString()}>
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-3.5 w-3.5 text-blue-600" />
+                          <span className="font-medium">{year}</span>
+                        </div>
                       </SelectItem>
-                        )
-                      })}
+                    ))}
                   </SelectContent>
                 </Select>
-                  </div>
-                </div>
-
-                {validationError && (
-                  <div className="flex items-center gap-1 text-sm text-red-600">
-                    <AlertCircle className="h-4 w-4" />
-                    {validationError}
-                  </div>
-                )}
-
-                {/* Valores mensuales - Grid simple */}
-                <div className="space-y-3">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-base font-medium text-gray-900">Valores Mensuales</h3>
-                  <div className="text-sm text-gray-500">
-                    {(() => {
-                      const months = generateMonths()
-                      const filledMonths = months.filter(mes => {
-                        const monthData = newVariableValues[mes]
-                        return monthData && monthData.valor && monthData.valor.trim() !== ""
-                      }).length
-                      return `${filledMonths}/${months.length} meses completados`
-                    })()}
-                  </div>
-                </div>
-                {newVariableName && getVariableInstructions(newVariableName) && (
-                  <div className="flex items-start gap-2 px-3 py-2 bg-blue-50 border border-blue-200 rounded-lg">
-                    <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <div className="text-xs text-blue-700">
-                      <strong>{newVariableName}:</strong> {getVariableInstructions(newVariableName)?.descripcion}
-                    </div>
-                  </div>
-                )}
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-60 overflow-y-auto border rounded-lg p-3">
+
+              {/* Selector de variable */}
+              <div className="space-y-2">
+                <Label className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-blue-600" />
+                  Variable
+                </Label>
+                <Select value={newVariableName} onValueChange={(value) => { selectPreloadedVariable(value) }}>
+                  <SelectTrigger className="w-full h-11 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 bg-white hover:border-gray-300 transition-all">
+                    <SelectValue placeholder={loadingExistingForYear ? 'Cargando...' : 'Selecciona una variable...'} />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
+                    {variablesDisponibles.map((variable, index) => {
+                      const yaRegistrada = existingVariablesForYear.has(variable)
+                      return (
+                        <SelectItem key={index} value={variable} disabled={yaRegistrada}>
+                          <div className="flex items-center gap-2">
+                            <BarChart3 className={`h-3.5 w-3.5 ${yaRegistrada ? 'text-gray-400' : 'text-blue-600'}`} />
+                            <span className={`font-medium ${yaRegistrada ? 'text-gray-400' : 'text-gray-900'}`}>{variable}</span>
+                            {yaRegistrada && (
+                              <span className="ml-auto text-xs text-red-500 bg-red-50 px-2 py-0.5 rounded-full">Ya registrada</span>
+                            )}
+                          </div>
+                        </SelectItem>
+                      )
+                    })}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {validationError && (
+              <div className="flex items-center gap-2 px-4 py-3 bg-red-50 border-2 border-red-200 rounded-xl text-sm text-red-700 animate-in slide-in-from-top-2">
+                <AlertCircle className="h-5 w-5 text-red-600 flex-shrink-0" />
+                <span className="font-medium">{validationError}</span>
+              </div>
+            )}
+
+            {/* Información de la variable */}
+            {newVariableName && getVariableInstructions(newVariableName) && (
+              <div className="flex items-start gap-3 px-4 py-3.5 bg-gradient-to-r from-blue-50 to-blue-100/50 border-2 border-blue-200 rounded-xl shadow-sm">
+                <div className="p-1.5 bg-blue-200 rounded-lg">
+                  <AlertCircle className="h-4 w-4 text-blue-700" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-blue-900 mb-1">{newVariableName}</p>
+                  <p className="text-xs text-blue-700 leading-relaxed">
+                    {getVariableInstructions(newVariableName)?.descripcion}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Valores mensuales */}
+            <div className="space-y-4">
+              <div className="flex items-center justify-between pb-2 border-b border-gray-200">
+                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-blue-600" />
+                  Valores Mensuales
+                </h3>
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-lg">
+                  <div className="flex items-center gap-1.5">
+                    <div className={`w-2 h-2 rounded-full ${
+                      (() => {
+                        const months = generateMonths()
+                        const filledMonths = months.filter(mes => {
+                          const monthData = newVariableValues[mes]
+                          return monthData && monthData.valor && monthData.valor.trim() !== ""
+                        }).length
+                        return filledMonths === months.length ? 'bg-green-500' : 'bg-blue-500'
+                      })()
+                    } animate-pulse`} />
+                    <span className="text-sm font-semibold text-blue-700">
+                      {(() => {
+                        const months = generateMonths()
+                        const filledMonths = months.filter(mes => {
+                          const monthData = newVariableValues[mes]
+                          return monthData && monthData.valor && monthData.valor.trim() !== ""
+                        }).length
+                        return `${filledMonths}/${months.length} meses`
+                      })()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-[400px] overflow-y-auto pr-2">
                 {generateMonths().map((mes) => {
                   const valorActual = newVariableValues[mes]?.valor || ""
                   const esValorValido = isValidNumber(valorActual)
+                  const tieneValor = valorActual && valorActual.trim() !== ""
                   
                   return (
-                  <div key={mes} className="space-y-2 p-3 border rounded-lg bg-gray-50">
-                    <div className="text-sm font-medium text-gray-700">{mes}</div>
-                    <div className="relative">
-                      <Input
-                        value={valorActual}
-                        onChange={(e) => updateVariableValue(mes, 'valor', e.target.value)}
-                        placeholder="0.00"
-                        className={`text-sm ${
-                          valorActual && !esValorValido 
-                            ? 'border-red-500 focus:border-red-500 focus:ring-red-500' 
-                            : ''
-                        }`}
-                        title={valorActual && !esValorValido ? 'Formato numérico inválido' : ''}
-                      />
-                      {valorActual && !esValorValido && (
-                        <div className="absolute right-2 top-1/2 -translate-y-1/2">
-                          <AlertCircle className="h-4 w-4 text-red-500" />
+                    <div 
+                      key={mes} 
+                      className={`group relative space-y-2.5 p-4 rounded-xl border-2 transition-all duration-200 ${
+                        tieneValor && esValorValido
+                          ? 'bg-gradient-to-br from-green-50 to-green-100/50 border-green-300 shadow-sm'
+                          : tieneValor && !esValorValido
+                          ? 'bg-red-50 border-red-300 shadow-sm'
+                          : 'bg-white border-gray-200 hover:border-blue-300 hover:shadow-md'
+                      }`}
+                    >
+                      {/* Header del mes */}
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <Calendar className={`h-3.5 w-3.5 ${
+                            tieneValor && esValorValido ? 'text-green-600' : tieneValor && !esValorValido ? 'text-red-600' : 'text-gray-400'
+                          }`} />
+                          <span className={`text-sm font-bold ${
+                            tieneValor && esValorValido ? 'text-green-900' : tieneValor && !esValorValido ? 'text-red-900' : 'text-gray-700'
+                          }`}>
+                            {mes}
+                          </span>
                         </div>
-                      )}
+                        {tieneValor && esValorValido && (
+                          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                        )}
+                        {tieneValor && !esValorValido && (
+                          <AlertCircle className="h-4 w-4 text-red-500" />
+                        )}
+                      </div>
+
+                      {/* Input de valor */}
+                      <div className="relative">
+                        <Input
+                          value={valorActual}
+                          onChange={(e) => updateVariableValue(mes, 'valor', e.target.value)}
+                          placeholder="0.00"
+                          className={`h-10 text-sm rounded-lg border-2 transition-all ${
+                            tieneValor && !esValorValido
+                              ? 'border-red-400 focus:border-red-500 focus:ring-4 focus:ring-red-500/20 bg-red-50'
+                              : tieneValor && esValorValido
+                              ? 'border-green-400 focus:border-green-500 focus:ring-4 focus:ring-green-500/20 bg-white'
+                              : 'border-gray-300 focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 bg-white'
+                          }`}
+                          title={tieneValor && !esValorValido ? 'Formato numérico inválido' : ''}
+                        />
+                      </div>
+
+                      {/* Input de observaciones */}
+                      <Input
+                        value={newVariableValues[mes]?.observaciones || ""}
+                        onChange={(e) => updateVariableValue(mes, 'observaciones', e.target.value)}
+                        placeholder="Observaciones (opcional)"
+                        className="h-9 text-xs rounded-lg border border-gray-300 focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 bg-white/80"
+                      />
                     </div>
-                    <Input
-                      value={newVariableValues[mes]?.observaciones || ""}
-                      onChange={(e) => updateVariableValue(mes, 'observaciones', e.target.value)}
-                      placeholder="Observaciones"
-                      className="text-sm"
-                    />
-                  </div>
                   )
                 })}
               </div>
-                </div>
-              </>
+            </div>
           </div>
 
-          <DialogFooter className="flex gap-2">
+          {/* Footer mejorado */}
+          <DialogFooter className="flex gap-3 px-6 py-4 bg-gray-50 border-t border-gray-200">
             <Button
               variant="outline"
               onClick={handleCancelAddVariable}
               disabled={isAddingVariable}
+              className="h-11 px-6 rounded-xl border-2 border-gray-300 text-gray-700 font-semibold hover:bg-gray-100 hover:border-gray-400 transition-all"
             >
               Cancelar
             </Button>
             <Button
               onClick={handleSaveVariable}
               disabled={isAddingVariable || !isFormValid()}
-              className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              className="h-11 px-8 rounded-xl bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600 hover:from-blue-700 hover:via-blue-600 hover:to-blue-700 text-white font-bold shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transition-all transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              style={{ animation: isFormValid() ? 'gradient 3s ease infinite' : 'none' }}
             >
-              {isAddingVariable ? "Guardando..." : "Guardar Variable"}
+              {isAddingVariable ? (
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Guardando...</span>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <Save className="h-4 w-4" />
+                  <span>Guardar Variable</span>
+                </div>
+              )}
             </Button>
           </DialogFooter>
+
+          <style jsx>{`
+            @keyframes gradient {
+              0%, 100% { background-position: 0% 50%; }
+              50% { background-position: 100% 50%; }
+            }
+          `}</style>
         </DialogContent>
       </Dialog>
 

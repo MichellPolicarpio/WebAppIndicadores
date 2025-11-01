@@ -184,60 +184,70 @@ export function LoginForm() {
   return (
     <div className="relative">
       {/* Decorative elements around card */}
-      <div className="absolute -top-4 -right-4 w-20 h-20 bg-white/10 rounded-full blur-xl" />
-      <div className="absolute -bottom-4 -left-4 w-24 h-24 bg-white/10 rounded-full blur-xl" />
+      <div className="absolute -top-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '3s' }} />
+      <div className="absolute -bottom-6 -left-6 w-40 h-40 bg-white/10 rounded-full blur-2xl animate-pulse" style={{ animationDuration: '4s', animationDelay: '1s' }} />
       
-      <Card className="relative border-0 bg-white/95 backdrop-blur-2xl shadow-2xl shadow-black/20 overflow-hidden">
-        {/* Top accent bar */}
-        <div className="h-1 bg-gradient-to-r from-[#0D94B1] via-[#4DB1C6] to-[#8BC8D5]" />
+      <Card className="relative border-0 bg-white/98 backdrop-blur-xl shadow-2xl shadow-black/25 overflow-hidden">
+        {/* Top accent bar con gradiente mejorado */}
+        <div className="h-1.5 bg-gradient-to-r from-[#0D94B1] via-[#4DB1C6] via-[#8BC8D5] to-[#0D94B1] bg-[length:200%_100%]" style={{ animation: 'gradient 3s ease infinite' }} />
         
-        <CardHeader className="space-y-2 pb-3 pt-4 px-4 sm:px-5 text-center bg-gradient-to-b from-white to-gray-50/50">
-          <div className="mx-auto w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-[#0D94B1] to-[#4DB1C6] rounded-lg sm:rounded-xl flex items-center justify-center shadow-lg shadow-[#0D94B1]/30 rotate-3 hover:rotate-0 transition-transform">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <CardHeader className="space-y-3 pb-4 pt-6 px-6 text-center bg-gradient-to-b from-white via-gray-50/30 to-white">
+          <div className="mx-auto w-14 h-14 bg-gradient-to-br from-[#0D94B1] via-[#4DB1C6] to-[#8BC8D5] rounded-xl flex items-center justify-center shadow-xl shadow-[#0D94B1]/25 hover:shadow-2xl hover:shadow-[#0D94B1]/35 transition-all duration-300 hover:scale-105">
+            <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
             </svg>
           </div>
           
-          <div className="space-y-1">
-            <CardTitle className="text-lg sm:text-xl text-gray-900 font-bold">Iniciar Sesión</CardTitle>
-            <CardDescription className="text-xs sm:text-sm text-gray-600">
-              Ingresa tus credenciales para acceder
+          <div className="space-y-1.5">
+            <CardTitle className="text-2xl text-gray-900 font-bold tracking-tight">Iniciar Sesión</CardTitle>
+            <CardDescription className="text-sm text-gray-600 font-normal">
+              Ingresa tus credenciales para acceder al sistema
             </CardDescription>
           </div>
         </CardHeader>
         
-        <CardContent className="px-4 sm:px-5 pb-4 sm:pb-5">
-          <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-            <div className="space-y-2.5 sm:space-y-3">
-              <div className="space-y-1">
-                <Label htmlFor="email" className="text-xs sm:text-sm text-gray-700 font-medium">Usuario</Label>
+        <CardContent className="px-6 pb-6 pt-2">
+          <form onSubmit={handleSubmit} className="space-y-5">
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm text-gray-700 font-semibold flex items-center gap-1.5">
+                  <Mail className="h-3.5 w-3.5 text-[#0D94B1]" />
+                  Usuario
+                </Label>
                 <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#0D94B1]/20 to-[#4DB1C6]/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <Mail className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#0D94B1]/60 z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#0D94B1]/10 to-[#4DB1C6]/10 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+                    <Mail className="h-5 w-5 text-[#0D94B1]/70 group-hover:text-[#0D94B1] transition-colors" />
+                  </div>
                   <Input
                     id="email"
                     type="text"
                     placeholder="Ingresa tu usuario"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="relative pl-8 sm:pl-9 pr-3 py-3 sm:py-4 border-2 border-gray-200 focus:border-[#0D94B1] focus:ring-4 focus:ring-[#0D94B1]/10 rounded-lg transition-all text-xs sm:text-sm"
+                    className="relative pl-12 pr-4 py-3.5 border-2 border-gray-200 focus:border-[#0D94B1] focus:ring-4 focus:ring-[#0D94B1]/15 rounded-xl transition-all duration-200 text-sm bg-white hover:border-gray-300"
                     required
                   />
                 </div>
               </div>
               
-              <div className="space-y-1">
-                <Label htmlFor="password" className="text-xs sm:text-sm text-gray-700 font-medium">Contraseña</Label>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm text-gray-700 font-semibold flex items-center gap-1.5">
+                  <Lock className="h-3.5 w-3.5 text-[#0D94B1]" />
+                  Contraseña
+                </Label>
                 <div className="relative group">
-                  <div className="absolute inset-0 bg-gradient-to-r from-[#0D94B1]/20 to-[#4DB1C6]/20 rounded-lg blur opacity-0 group-hover:opacity-100 transition-opacity" />
-                  <Lock className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-[#0D94B1]/60 z-10" />
+                  <div className="absolute inset-0 bg-gradient-to-r from-[#0D94B1]/10 to-[#4DB1C6]/10 rounded-xl blur-sm opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                  <div className="absolute left-4 top-1/2 -translate-y-1/2 z-10">
+                    <Lock className="h-5 w-5 text-[#0D94B1]/70 group-hover:text-[#0D94B1] transition-colors" />
+                  </div>
                   <Input
                     id="password"
                     type="password"
                     placeholder="Ingresa tu contraseña"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="relative pl-8 sm:pl-9 pr-3 py-3 sm:py-4 border-2 border-gray-200 focus:border-[#0D94B1] focus:ring-4 focus:ring-[#0D94B1]/10 rounded-lg transition-all text-xs sm:text-sm"
+                    className="relative pl-12 pr-4 py-3.5 border-2 border-gray-200 focus:border-[#0D94B1] focus:ring-4 focus:ring-[#0D94B1]/15 rounded-xl transition-all duration-200 text-sm bg-white hover:border-gray-300"
                     required
                   />
                 </div>
@@ -245,27 +255,28 @@ export function LoginForm() {
             </div>
 
             {error && (
-              <Alert variant="destructive" className="bg-red-50 border-2 border-red-200 text-red-700 animate-in slide-in-from-top-2">
-                <AlertCircle className="h-3.5 w-3.5" />
-                <AlertDescription className="font-medium text-xs sm:text-sm">{error}</AlertDescription>
+              <Alert variant="destructive" className="bg-red-50/90 border-2 border-red-300 text-red-800 animate-in slide-in-from-top-2 duration-300 rounded-xl">
+                <AlertCircle className="h-4 w-4 text-red-600" />
+                <AlertDescription className="font-medium text-sm ml-1">{error}</AlertDescription>
               </Alert>
             )}
 
             <Button 
               type="submit" 
-              className="w-full bg-gradient-to-r from-[#0D94B1] to-[#4DB1C6] hover:from-[#0B7A96] hover:to-[#3A9FB8] text-white py-3 sm:py-4 rounded-lg font-semibold shadow-lg shadow-[#0D94B1]/30 hover:shadow-xl hover:shadow-[#0D94B1]/40 transition-all transform hover:-translate-y-0.5 text-xs sm:text-sm" 
+              className="w-full bg-gradient-to-r from-[#0D94B1] via-[#4DB1C6] to-[#0D94B1] bg-[length:200%_100%] hover:from-[#0B7A96] hover:via-[#3A9FB8] hover:to-[#0B7A96] text-white py-3.5 rounded-xl font-bold shadow-xl shadow-[#0D94B1]/30 hover:shadow-2xl hover:shadow-[#0D94B1]/40 transition-all duration-300 transform hover:-translate-y-0.5 text-sm tracking-wide disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none" 
+              style={{ animation: 'gradient 3s ease infinite' }}
               disabled={loading}
             >
               {loading ? (
-                <div className="flex items-center gap-1.5">
-                  <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  <span className="text-xs sm:text-sm">Iniciando sesión...</span>
+                <div className="flex items-center justify-center gap-2">
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  <span>Iniciando sesión...</span>
                 </div>
               ) : (
-                <div className="flex items-center justify-center gap-1.5">
+                <div className="flex items-center justify-center gap-2">
                   <span>Iniciar Sesión</span>
-                  <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6" />
                   </svg>
                 </div>
               )}
@@ -273,6 +284,13 @@ export function LoginForm() {
           </form>
         </CardContent>
       </Card>
+      
+      <style jsx>{`
+        @keyframes gradient {
+          0%, 100% { background-position: 0% 50%; }
+          50% { background-position: 100% 50%; }
+        }
+      `}</style>
     </div>
   )
 }

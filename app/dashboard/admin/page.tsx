@@ -21,6 +21,19 @@ import { Users, Shield, AlertCircle, Plus, Edit, Trash2, Search, Loader2, Save }
 import { getUser, type User } from "@/lib/auth"
 import { toast } from "sonner"
 
+interface Empresa {
+  idEmpresaOperadora: number
+  nombreEmpresaOperadora: string
+  claveEmpresaOperadora: string
+}
+
+interface Gerencia {
+  id_Empresa_Gerencia: number
+  nomGerencia: string
+  nombreEmpresaOperadora: string
+  claveEmpresaOperadora: string
+}
+
 interface UsuarioAdmin {
   id: number
   usuario: string
@@ -59,6 +72,26 @@ export default function AdminPage() {
     estatusUsuario: "",
   })
   const [saving, setSaving] = useState(false)
+  
+  // Estados para crear nuevo usuario
+  const [createDialogOpen, setCreateDialogOpen] = useState(false)
+  const [createFormData, setCreateFormData] = useState({
+    usuario: "",
+    contraseña: "",
+    nombres: "",
+    apellidoPaterno: "",
+    apellidoMaterno: "",
+    correo: "",
+    rolUsuario: "",
+    estatusUsuario: "1",
+    empresaId: "",
+    gerenciaId: "",
+  })
+  const [creating, setCreating] = useState(false)
+  const [empresas, setEmpresas] = useState<Empresa[]>([])
+  const [gerencias, setGerencias] = useState<Gerencia[]>([])
+  const [loadingEmpresas, setLoadingEmpresas] = useState(false)
+  const [loadingGerencias, setLoadingGerencias] = useState(false)
 
   useEffect(() => {
     const currentUser = getUser()
@@ -77,12 +110,15 @@ export default function AdminPage() {
     setUser(currentUser)
     setLoading(false)
     fetchUsuarios()
+    fetchEmpresas()
   }, [router])
 
   const fetchUsuarios = async () => {
     setLoadingUsuarios(true)
     try {
-      const response = await fetch('/api/admin/users')
+      const response = await fetch('/api/admin/users', {
+        credentials: 'include'
+      })
       const result = await response.json()
       
       if (!response.ok || !result.success) {
@@ -95,6 +131,58 @@ export default function AdminPage() {
       toast.error(error.message || 'Error al cargar usuarios')
     } finally {
       setLoadingUsuarios(false)
+    }
+  }
+
+  const fetchEmpresas = async () => {
+    setLoadingEmpresas(true)
+    try {
+      console.log('🔄 [Admin] Cargando empresas...')
+      const response = await fetch('/api/admin/empresas', {
+        credentials: 'include'
+      })
+      const result = await response.json()
+      
+      console.log('📊 [Admin] Respuesta empresas:', { ok: response.ok, success: result.success, count: result.empresas?.length })
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Error al cargar empresas')
+      }
+      
+      const empresasData = result.empresas || []
+      console.log('✅ [Admin] Empresas cargadas:', empresasData.length)
+      setEmpresas(empresasData)
+    } catch (error: any) {
+      console.error('❌ Error cargando empresas:', error)
+      toast.error(error.message || 'Error al cargar empresas')
+    } finally {
+      setLoadingEmpresas(false)
+    }
+  }
+
+  const fetchGerencias = async (empresaId: string) => {
+    if (!empresaId) {
+      setGerencias([])
+      return
+    }
+    
+    setLoadingGerencias(true)
+    try {
+      const response = await fetch(`/api/admin/gerencias?empresaId=${empresaId}`, {
+        credentials: 'include'
+      })
+      const result = await response.json()
+      
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Error al cargar gerencias')
+      }
+      
+      setGerencias(result.gerencias || [])
+    } catch (error: any) {
+      console.error('Error cargando gerencias:', error)
+      toast.error(error.message || 'Error al cargar gerencias')
+    } finally {
+      setLoadingGerencias(false)
     }
   }
 
@@ -157,6 +245,84 @@ export default function AdminPage() {
     }
   }
 
+  const handleCreateClick = () => {
+    setCreateFormData({
+      usuario: "",
+      contraseña: "",
+      nombres: "",
+      apellidoPaterno: "",
+      apellidoMaterno: "",
+      correo: "",
+      rolUsuario: "",
+      estatusUsuario: "1",
+      empresaId: "",
+      gerenciaId: "",
+    })
+    setGerencias([])
+    // Asegurar que las empresas se carguen si no están disponibles
+    if (empresas.length === 0) {
+      console.log('🔄 [Admin] No hay empresas cargadas, recargando...')
+      fetchEmpresas()
+    } else {
+      console.log('✅ [Admin] Empresas ya cargadas:', empresas.length)
+    }
+    setCreateDialogOpen(true)
+  }
+
+  const handleEmpresaChange = (empresaId: string) => {
+    setCreateFormData({ ...createFormData, empresaId, gerenciaId: "" })
+    fetchGerencias(empresaId)
+  }
+
+  const handleCreateUser = async () => {
+    // Validaciones
+    if (!createFormData.usuario || !createFormData.contraseña || !createFormData.rolUsuario) {
+      toast.error('Usuario, contraseña y rol son campos requeridos')
+      return
+    }
+
+    // Si no es admin, empresa/gerencia es requerida
+    if (createFormData.rolUsuario !== "1" && !createFormData.gerenciaId) {
+      toast.error('La empresa/gerencia es requerida para usuarios no administradores')
+      return
+    }
+
+    setCreating(true)
+    try {
+      const response = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          usuario: createFormData.usuario,
+          contraseña: createFormData.contraseña,
+          nombres: createFormData.nombres || null,
+          apellidoPaterno: createFormData.apellidoPaterno || null,
+          apellidoMaterno: createFormData.apellidoMaterno || null,
+          correo: createFormData.correo || null,
+          rolUsuario: createFormData.rolUsuario,
+          estatusUsuario: createFormData.estatusUsuario,
+          idEmpresa_Gerencia: createFormData.gerenciaId || null
+        }),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.message || 'Error al crear usuario')
+      }
+
+      toast.success('Usuario creado correctamente')
+      setCreateDialogOpen(false)
+      fetchUsuarios() // Recargar lista
+    } catch (error: any) {
+      console.error('Error creando usuario:', error)
+      toast.error(error.message || 'Error al crear usuario')
+    } finally {
+      setCreating(false)
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -174,14 +340,23 @@ export default function AdminPage() {
       {/* Sección de Gestión de Usuarios */}
       <Card className="border-gray-200 bg-white shadow-md">
         <CardHeader className="border-b border-gray-200 bg-white">
-          <div className="flex items-center gap-3">
-            <Users className="h-6 w-6 text-blue-600" />
-            <div>
-              <CardTitle className="text-xl text-gray-900">Gestión de Usuarios</CardTitle>
-              <CardDescription className="text-sm text-gray-600 mt-1">
-                Ver, crear, editar y eliminar usuarios del sistema
-              </CardDescription>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Users className="h-6 w-6 text-blue-600" />
+              <div>
+                <CardTitle className="text-xl text-gray-900">Gestión de Usuarios</CardTitle>
+                <CardDescription className="text-sm text-gray-600 mt-1">
+                  Ver, crear, editar y eliminar usuarios del sistema
+                </CardDescription>
+              </div>
             </div>
+            <Button
+              onClick={handleCreateClick}
+              className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+            >
+              <Plus className="h-4 w-4" />
+              Agregar Usuario
+            </Button>
           </div>
         </CardHeader>
         <CardContent className="p-6 pt-0">
@@ -369,6 +544,220 @@ export default function AdminPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Dialog de Crear Usuario */}
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Plus className="h-5 w-5 text-green-600" />
+              Crear Nuevo Usuario
+            </DialogTitle>
+            <DialogDescription>
+              Completa el formulario para agregar un nuevo usuario al sistema
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {/* Usuario y Contraseña */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="usuario-create">Usuario *</Label>
+                <Input
+                  id="usuario-create"
+                  value={createFormData.usuario}
+                  onChange={(e) => setCreateFormData({ ...createFormData, usuario: e.target.value })}
+                  placeholder="Nombre de usuario"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="contraseña-create">Contraseña *</Label>
+                <Input
+                  id="contraseña-create"
+                  type="password"
+                  value={createFormData.contraseña}
+                  onChange={(e) => setCreateFormData({ ...createFormData, contraseña: e.target.value })}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Nombres */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="nombres-create">Nombre(s)</Label>
+                <Input
+                  id="nombres-create"
+                  value={createFormData.nombres}
+                  onChange={(e) => setCreateFormData({ ...createFormData, nombres: e.target.value })}
+                  placeholder="Nombre(s)"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="apellidoPaterno-create">Apellido Paterno</Label>
+                <Input
+                  id="apellidoPaterno-create"
+                  value={createFormData.apellidoPaterno}
+                  onChange={(e) => setCreateFormData({ ...createFormData, apellidoPaterno: e.target.value })}
+                  placeholder="Apellido Paterno"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="apellidoMaterno-create">Apellido Materno</Label>
+              <Input
+                id="apellidoMaterno-create"
+                value={createFormData.apellidoMaterno}
+                onChange={(e) => setCreateFormData({ ...createFormData, apellidoMaterno: e.target.value })}
+                placeholder="Apellido Materno"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="correo-create">Correo Electrónico</Label>
+              <Input
+                id="correo-create"
+                type="email"
+                value={createFormData.correo}
+                onChange={(e) => setCreateFormData({ ...createFormData, correo: e.target.value })}
+                placeholder="correo@ejemplo.com"
+              />
+            </div>
+
+            {/* Rol y Estado */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="rol-create">Rol *</Label>
+                <Select
+                  value={createFormData.rolUsuario}
+                  onValueChange={(value) => {
+                    setCreateFormData({ ...createFormData, rolUsuario: value })
+                    // Si es admin, limpiar empresa/gerencia
+                    if (value === "1") {
+                      setCreateFormData(prev => ({ ...prev, empresaId: "", gerenciaId: "" }))
+                      setGerencias([])
+                    }
+                  }}
+                >
+                  <SelectTrigger id="rol-create">
+                    <SelectValue placeholder="Seleccionar rol" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Administrador</SelectItem>
+                    <SelectItem value="2">Creador</SelectItem>
+                    <SelectItem value="3">Consultas</SelectItem>
+                    <SelectItem value="4">Desinfección</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="estado-create">Estado</Label>
+                <Select
+                  value={createFormData.estatusUsuario}
+                  onValueChange={(value) => setCreateFormData({ ...createFormData, estatusUsuario: value })}
+                >
+                  <SelectTrigger id="estado-create">
+                    <SelectValue placeholder="Seleccionar estado" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="1">Activo</SelectItem>
+                    <SelectItem value="0">Inactivo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Empresa y Gerencia (solo si no es admin) */}
+            {createFormData.rolUsuario !== "1" && (
+              <div className="space-y-4 pt-2 border-t border-gray-200">
+                <div className="space-y-2">
+                  <Label htmlFor="empresa-create">Empresa *</Label>
+                  {empresas.length === 0 && !loadingEmpresas && (
+                    <div className="text-xs text-orange-600 bg-orange-50 border border-orange-200 rounded-md px-3 py-2 mb-2">
+                      No hay empresas disponibles. Intenta recargar la página.
+                    </div>
+                  )}
+                  <Select
+                    value={createFormData.empresaId}
+                    onValueChange={handleEmpresaChange}
+                    disabled={loadingEmpresas || empresas.length === 0}
+                  >
+                    <SelectTrigger id="empresa-create">
+                      <SelectValue placeholder={loadingEmpresas ? "Cargando..." : empresas.length === 0 ? "No hay empresas" : "Seleccionar empresa"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {empresas.map((empresa) => (
+                        <SelectItem key={empresa.idEmpresaOperadora} value={empresa.idEmpresaOperadora.toString()}>
+                          {empresa.nombreEmpresaOperadora} ({empresa.claveEmpresaOperadora})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="gerencia-create">Gerencia *</Label>
+                  <Select
+                    value={createFormData.gerenciaId}
+                    onValueChange={(value) => setCreateFormData({ ...createFormData, gerenciaId: value })}
+                    disabled={!createFormData.empresaId || loadingGerencias}
+                  >
+                    <SelectTrigger id="gerencia-create">
+                      <SelectValue
+                        placeholder={
+                          !createFormData.empresaId
+                            ? "Selecciona empresa primero"
+                            : loadingGerencias
+                            ? "Cargando..."
+                            : "Seleccionar gerencia"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {gerencias.map((gerencia) => (
+                        <SelectItem key={gerencia.id_Empresa_Gerencia} value={gerencia.id_Empresa_Gerencia.toString()}>
+                          {gerencia.nomGerencia}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setCreateDialogOpen(false)}
+              disabled={creating}
+            >
+              Cancelar
+            </Button>
+            <Button
+              onClick={handleCreateUser}
+              disabled={creating}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              {creating ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Creando...
+                </>
+              ) : (
+                <>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Crear Usuario
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Dialog de Editar Usuario */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
