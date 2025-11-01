@@ -231,7 +231,7 @@ export default function AgregarObjetivoPage() {
       fetchExistingVariablesForYear(selectedYearForNewVariable)
     }
   }, [addVariableDialogOpen, selectedYearForNewVariable, fetchExistingVariablesForYear])
-
+  
   // Estado para edición híbrida
   const [editingVariable, setEditingVariable] = useState<Objetivo | null>(null)
   const [editVariableDialogOpen, setEditVariableDialogOpen] = useState(false)
@@ -374,9 +374,9 @@ export default function AgregarObjetivoPage() {
       return
     }
 
-    setLoadingObjetivos(true)
-    try {
-      const yearToFetch = viewType === 'anual' ? selectedYearForAnnual : parseInt(selectedYear)
+      setLoadingObjetivos(true)
+      try {
+        const yearToFetch = viewType === 'anual' ? selectedYearForAnnual : parseInt(selectedYear)
       const finalYear = yearOverride ?? yearToFetch
       
       let response: Response
@@ -395,20 +395,20 @@ export default function AgregarObjetivoPage() {
         return
       }
       
-      const result = await response.json()
-      if (result.success) {
-        setObjetivos(result.data || [])
+        const result = await response.json()
+        if (result.success) {
+          setObjetivos(result.data || [])
         if (result.years && result.years.length > 0) setYearsWithData(result.years)
-      } else {
-        console.error('❌ Error al cargar objetivos:', result.message)
+        } else {
+          console.error('❌ Error al cargar objetivos:', result.message)
+          setObjetivos([])
+        }
+      } catch (error) {
+        console.error('❌ Error fetching objetivos:', error)
         setObjetivos([])
+      } finally {
+        setLoadingObjetivos(false)
       }
-    } catch (error) {
-      console.error('❌ Error fetching objetivos:', error)
-      setObjetivos([])
-    } finally {
-      setLoadingObjetivos(false)
-    }
   }, [selectedYear, selectedYearForAnnual, viewType, isAdmin, selectedGerencia, user])
 
   // Reemplazar el useEffect anterior por uno que use fetchObjetivos directamente
@@ -499,7 +499,7 @@ export default function AgregarObjetivoPage() {
         observaciones: newVariableValues[mes]?.observaciones || ''
       }
     })
-
+    
     try {
       // Llamar al API para guardar en la base de datos
       const response = await fetch('/api/objetivos', {
@@ -837,64 +837,64 @@ export default function AgregarObjetivoPage() {
           {/* Fila 1: Título */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 mb-2.5">
             <div className="flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5 text-blue-600" />
+                  <Calendar className="h-3.5 w-3.5 text-blue-600" />
               <span className="text-xs font-medium text-gray-700">Año:</span>
-            </div>
-          </div>
-          
-          {/* Fila 2: Navegación de años */}
-          <div className="flex items-center gap-1.5 mb-2.5">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigateYear('prev')}
-              disabled={allYears.indexOf(yearRangeStart) === 0}
-              className="border border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 flex-shrink-0 h-7 w-7 p-0 rounded-md shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <ChevronLeft className="h-3.5 w-3.5" />
-            </Button>
-            
-            {/* Container de años */}
-            <div className="flex-1 relative">
-              <div className="grid grid-cols-3 xl:grid-cols-6 gap-1 bg-gradient-to-r from-gray-100 to-gray-50 rounded-lg p-1.5 shadow-inner">
-                {getVisibleYears().map((year) => {
-                  const isSelected = selectedYearForAnnual === year
-                  const hasData = yearsWithData.includes(year)
-                  
-                  return (
-                    <button
-                      key={year}
-                      onClick={() => selectYearForAnnual(year)}
-                      className={`px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 whitespace-nowrap relative ${
-                        isSelected
-                          ? hasData
-                            ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg'
-                            : 'bg-gradient-to-r from-gray-500 to-gray-400 text-white shadow-lg opacity-70'
-                          : hasData
-                            ? 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700 shadow-sm'
-                            : 'bg-gray-100 text-gray-400 hover:bg-gray-200 shadow-sm opacity-60'
-                      }`}
-                    >
-                      {year}
-                      {!hasData && (
-                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full"></span>
-                      )}
-                    </button>
-                  )
-                })}
               </div>
             </div>
             
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigateYear('next')}
-              disabled={allYears.indexOf(yearRangeStart) + YEARS_PER_PAGE >= allYears.length}
+          {/* Fila 2: Navegación de años */}
+          <div className="flex items-center gap-1.5 mb-2.5">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateYear('prev')}
+                disabled={allYears.indexOf(yearRangeStart) === 0}
               className="border border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 flex-shrink-0 h-7 w-7 p-0 rounded-md shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-            >
+              >
+              <ChevronLeft className="h-3.5 w-3.5" />
+              </Button>
+              
+              {/* Container de años */}
+              <div className="flex-1 relative">
+                <div className="grid grid-cols-3 xl:grid-cols-6 gap-1 bg-gradient-to-r from-gray-100 to-gray-50 rounded-lg p-1.5 shadow-inner">
+                  {getVisibleYears().map((year) => {
+                    const isSelected = selectedYearForAnnual === year
+                    const hasData = yearsWithData.includes(year)
+                    
+                    return (
+                      <button
+                        key={year}
+                        onClick={() => selectYearForAnnual(year)}
+                      className={`px-2 py-1.5 text-xs font-medium rounded-md transition-all duration-200 whitespace-nowrap relative ${
+                          isSelected
+                            ? hasData
+                              ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg'
+                              : 'bg-gradient-to-r from-gray-500 to-gray-400 text-white shadow-lg opacity-70'
+                            : hasData
+                              ? 'bg-white text-gray-700 hover:bg-blue-50 hover:text-blue-700 shadow-sm'
+                              : 'bg-gray-100 text-gray-400 hover:bg-gray-200 shadow-sm opacity-60'
+                        }`}
+                      >
+                        {year}
+                        {!hasData && (
+                        <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-400 rounded-full"></span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigateYear('next')}
+                disabled={allYears.indexOf(yearRangeStart) + YEARS_PER_PAGE >= allYears.length}
+              className="border border-gray-300 text-gray-700 hover:bg-blue-50 hover:border-blue-300 flex-shrink-0 h-7 w-7 p-0 rounded-md shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
               <ChevronRight className="h-3.5 w-3.5" />
-            </Button>
-          </div>
+              </Button>
+            </div>
 
           {/* Filtros de Admin (solo si es admin) */}
           {isAdmin && (
@@ -969,24 +969,24 @@ export default function AgregarObjetivoPage() {
               </div>
             </div>
           )}
-
-          {/* Información del período seleccionado */}
+            
+            {/* Información del período seleccionado */}
           <div className={`${isAdmin ? 'mt-2.5' : 'mt-2'} pt-2 border-t border-gray-200`}>
-            <div className="flex items-center justify-center">
+                <div className="flex items-center justify-center">
               <div className={`flex items-center gap-1.5 px-2 py-1 rounded-md text-xs shadow-sm ${
-                yearsWithData.includes(selectedYearForAnnual)
+                    yearsWithData.includes(selectedYearForAnnual)
                   ? 'bg-gradient-to-r from-blue-50 to-blue-100 border border-blue-200 text-blue-700'
                   : 'bg-gradient-to-r from-orange-50 to-orange-100 border border-orange-200 text-orange-700'
-              }`}>
-                <Calendar className={`h-3.5 w-3.5 ${yearsWithData.includes(selectedYearForAnnual) ? 'text-blue-600' : 'text-orange-500'}`} />
+                  }`}>
+                    <Calendar className={`h-3.5 w-3.5 ${yearsWithData.includes(selectedYearForAnnual) ? 'text-blue-600' : 'text-orange-500'}`} />
                 <span className="font-semibold">{selectedYearForAnnual}</span>
-                {!yearsWithData.includes(selectedYearForAnnual) && (
+                        {!yearsWithData.includes(selectedYearForAnnual) && (
                   <span className="text-[10px]">(Vacío)</span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
       )}
 
       <Card className="border-gray-200 bg-white shadow-md">
@@ -1193,7 +1193,7 @@ export default function AgregarObjetivoPage() {
                     <tr key={objetivo.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-3 xl:px-6 py-3 text-center text-xs text-gray-900 sticky left-0 bg-white z-10 font-medium max-w-[150px] xl:max-w-[200px]" title={objetivo.nombre}>
                         <div className="whitespace-normal break-words hyphens-auto mx-auto" style={{ lineHeight: '1.2', maxHeight: '2.4em', overflow: 'hidden' }}>
-                          {objetivo.nombre}
+                        {objetivo.nombre}
                         </div>
                       </td>
                       {generateMonths().map((mes) => (
@@ -1296,36 +1296,36 @@ export default function AgregarObjetivoPage() {
           </DialogHeader>
           
           <div className="space-y-4">
-            <>
-              {/* Selectores en línea */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Selector de año */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Año</Label>
+              <>
+                {/* Selectores en línea */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Selector de año */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Año</Label>
                   <Select value={selectedYearForNewVariable} onValueChange={(v) => setSelectedYearForNewVariable(v)}>
-                    <SelectTrigger className="w-full">
+                      <SelectTrigger className="w-full">
                       <SelectValue placeholder="Selecciona un año..." />
-                    </SelectTrigger>
-                    <SelectContent>
+                      </SelectTrigger>
+                      <SelectContent>
                       {allYears.map((year) => (
-                        <SelectItem key={year} value={year.toString()}>
-                          <div className="flex items-center gap-2">
-                            <span className="font-medium">{year}</span>
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+                          <SelectItem key={year} value={year.toString()}>
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{year}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
 
-                {/* Selector de variable */}
-                <div className="space-y-2">
-                  <Label className="text-sm font-medium">Variable</Label>
+                  {/* Selector de variable */}
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium">Variable</Label>
                   <Select value={newVariableName} onValueChange={(value) => { selectPreloadedVariable(value) }}>
-                    <SelectTrigger className="w-full">
+                  <SelectTrigger className="w-full">
                       <SelectValue placeholder={loadingExistingForYear ? 'Cargando...' : 'Variable...'} />
-                    </SelectTrigger>
-                    <SelectContent className="max-h-60">
+                  </SelectTrigger>
+                  <SelectContent className="max-h-60">
                       {variablesDisponibles.map((variable, index) => {
                         const yaRegistrada = existingVariablesForYear.has(variable)
                         return (
@@ -1336,23 +1336,23 @@ export default function AgregarObjetivoPage() {
                                 <span className="text-xs text-red-500">(Ya registrada para este año)</span>
                               )}
                             </div>
-                          </SelectItem>
+                      </SelectItem>
                         )
                       })}
-                    </SelectContent>
-                  </Select>
+                  </SelectContent>
+                </Select>
+                  </div>
                 </div>
-              </div>
 
-              {validationError && (
-                <div className="flex items-center gap-1 text-sm text-red-600">
-                  <AlertCircle className="h-4 w-4" />
-                  {validationError}
-                </div>
-              )}
+                {validationError && (
+                  <div className="flex items-center gap-1 text-sm text-red-600">
+                    <AlertCircle className="h-4 w-4" />
+                    {validationError}
+                  </div>
+                )}
 
-              {/* Valores mensuales - Grid simple */}
-              <div className="space-y-3">
+                {/* Valores mensuales - Grid simple */}
+                <div className="space-y-3">
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-base font-medium text-gray-900">Valores Mensuales</h3>

@@ -138,185 +138,83 @@ export default function ConfiguracionPage() {
         </Alert>
       )}
 
-      <Tabs defaultValue="perfil" className="space-y-6">
-        <TabsList className="bg-white border border-gray-200 shadow-sm">
-          <TabsTrigger value="perfil" className="data-[state=active]:bg-sky-100 data-[state=active]:text-sky-900 text-gray-700">
-            <UserIcon className="h-4 w-4 mr-2" />
-            Perfil
-          </TabsTrigger>
-          <TabsTrigger value="empresa" className="data-[state=active]:bg-sky-100 data-[state=active]:text-sky-900 text-gray-700">
-            <Building2 className="h-4 w-4 mr-2" />
-            Empresa
-          </TabsTrigger>
-          <TabsTrigger value="seguridad" className="data-[state=active]:bg-sky-100 data-[state=active]:text-sky-900 text-gray-700">
-            <Shield className="h-4 w-4 mr-2" />
-            Seguridad
-          </TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="perfil" className="space-y-6">
-          <Card className="border-gray-200 bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Información Personal</CardTitle>
-              <CardDescription className="text-gray-600">
-                Actualiza tu información de perfil y datos de contacto
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="flex items-center gap-6 pb-6 border-b border-gray-200">
-                <div className="w-20 h-20 rounded-full bg-gray-100 flex items-center justify-center">
-                  <UserIcon className="h-10 w-10 text-gray-600" />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Columna izquierda: Perfil y Empresa combinados */}
+        <div className="lg:col-span-2 space-y-6">
+           <Card className="border-gray-200 bg-white shadow-sm">
+             <CardHeader>
+               <CardTitle className="text-gray-900">Información Personal y Empresa</CardTitle>
+               <CardDescription className="text-gray-600">
+                 Información de tu cuenta y empresa (solo lectura)
+               </CardDescription>
+             </CardHeader>
+            <CardContent className="pt-4">
+              {/* Diseño en grid compacto vertical */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">Nombre completo</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {`${formData.nombres || ''} ${formData.apellidoPaterno || ''} ${formData.apellidoMaterno || ''}`.trim() || '-'}
+                  </p>
                 </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="usuario" className="text-gray-700">
-                    Usuario
-                  </Label>
-                  <Input
-                    id="usuario"
-                    value={formData.usuario}
-                    disabled
-                    className="bg-gray-100 border-gray-300 text-gray-500"
-                  />
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">Usuario</p>
+                  <p className="text-sm font-medium text-gray-900">{formData.usuario || '-'}</p>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="correo" className="text-gray-700">
-                    Correo Electrónico
-                  </Label>
-                  <Input
-                    id="correo"
-                    type="email"
-                    value={formData.correo}
-                    onChange={(e) => setFormData({ ...formData, correo: e.target.value })}
-                    className="bg-white border-gray-300 text-gray-900"
-                    placeholder="correo@ejemplo.com"
-                  />
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">Correo</p>
+                  <p className="text-sm font-medium text-gray-900">{formData.correo || '-'}</p>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="nombres" className="text-gray-700">
-                    Nombre(s)
-                  </Label>
-                  <Input
-                    id="nombres"
-                    value={formData.nombres}
-                    onChange={(e) => setFormData({ ...formData, nombres: e.target.value })}
-                    className="bg-white border-gray-300 text-gray-900"
-                    placeholder="Nombre(s)"
-                  />
+                <div className="space-y-1">
+                  <p className="text-xs text-gray-500">Empresa</p>
+                  <p className="text-sm font-medium text-gray-900">
+                    {user.company === "GMas" 
+                      ? "Grupo Metropolitano de Agua y Saneamiento" 
+                      : user.company === "CAB"
+                      ? "Compañía de Agua de Boca del Río"
+                      : user.company || '-'}
+                  </p>
                 </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="apellidoPaterno" className="text-gray-700">
-                    Apellido Paterno
-                  </Label>
-                  <Input
-                    id="apellidoPaterno"
-                    value={formData.apellidoPaterno}
-                    onChange={(e) => setFormData({ ...formData, apellidoPaterno: e.target.value })}
-                    className="bg-white border-gray-300 text-gray-900"
-                    placeholder="Apellido Paterno"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="apellidoMaterno" className="text-gray-700">
-                    Apellido Materno
-                  </Label>
-                  <Input
-                    id="apellidoMaterno"
-                    value={formData.apellidoMaterno}
-                    onChange={(e) => setFormData({ ...formData, apellidoMaterno: e.target.value })}
-                    className="bg-white border-gray-300 text-gray-900"
-                    placeholder="Apellido Materno"
-                  />
-                </div>
-
-                {/* Solo mostrar gerencia si NO es admin */}
                 {user.rolUsuario !== 1 && (
-                  <div className="space-y-2">
-                    <Label htmlFor="gerencia" className="text-gray-700">
-                      Gerencia
-                    </Label>
-                    <Input
-                      id="gerencia"
-                      value={formData.gerencia}
-                      disabled
-                      className="bg-gray-100 border-gray-300 text-gray-500"
-                    />
+                  <div className="space-y-1">
+                    <p className="text-xs text-gray-500">Gerencia</p>
+                    <p className="text-sm font-medium text-gray-900">{formData.gerencia || '-'}</p>
                   </div>
                 )}
               </div>
-
-              <div className="flex justify-end pt-4">
-                <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
-                  <Save className="h-4 w-4 mr-2" />
-                  Guardar Cambios
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="empresa" className="space-y-6">
-          <Card className="border-gray-200 bg-white shadow-sm">
-            <CardHeader>
-              <CardTitle className="text-gray-900">Información de la Empresa</CardTitle>
-              <CardDescription className="text-gray-600">Detalles de tu organización</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center gap-4 p-4 bg-gray-100 rounded-lg">
-                <div className="w-16 h-16 rounded-lg overflow-hidden bg-white flex items-center justify-center shadow-sm">
+              
+              {/* Logo de empresa al final de la card */}
+              <div className="pt-4 border-t border-gray-200 flex flex-col items-center justify-center gap-3">
+                <div className="w-32 h-32 rounded-lg overflow-hidden bg-white border border-gray-200 flex items-center justify-center shadow-md">
                   <img
                     src={user.company === "GMas" ? "/logos/gmas-logo.png" : "/logos/cab-logo.png"}
                     alt={`Logo ${user.company}`}
-                    className="w-full h-full object-contain"
+                    className="w-full h-full object-contain p-3"
                   />
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    {user.company === "GMas" ? "Grupo Mas Agua" : "Compañía de Agua de Boca del Río"}
-                  </h3>
-                  <p className="text-sm text-gray-600">{user.company}</p>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label className="text-gray-700">Empresa</Label>
-                  <Input value={user.company} disabled className="bg-gray-100 border-gray-300 text-gray-500" />
-                </div>
-
-                {/* Solo mostrar gerencia si NO es admin */}
-                {user.rolUsuario !== 1 && (
-                  <div className="space-y-2">
-                    <Label className="text-gray-700">Gerencia</Label>
-                    <Input value={user.gerencia} disabled className="bg-gray-100 border-gray-300 text-gray-500" />
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label className="text-gray-700">Ubicación</Label>
-                  <Input value="Veracruz, México" disabled className="bg-gray-100 border-gray-300 text-gray-500" />
-                </div>
-
-                <div className="space-y-2">
-                  <Label className="text-gray-700">Zona Horaria</Label>
-                  <Input
-                    value="GMT-6 (Ciudad de México)"
-                    disabled
-                    className="bg-gray-100 border-gray-300 text-gray-500"
-                  />
-                </div>
+                <p className="text-xs font-medium text-gray-600 text-center">
+                  {user.company === "GMas" 
+                    ? "Grupo Metropolitano de Agua y Saneamiento" 
+                    : user.company === "CAB"
+                    ? "Compañía de Agua de Boca del Río"
+                    : user.company || '-'}
+                </p>
               </div>
             </CardContent>
           </Card>
-        </TabsContent>
+        </div>
 
-        <TabsContent value="seguridad" className="space-y-6">
+        {/* Columna derecha: Seguridad */}
+        <div className="space-y-6">
+          <Tabs defaultValue="seguridad" className="space-y-6">
+            <TabsList className="bg-white border border-gray-200 shadow-sm w-full">
+              <TabsTrigger value="seguridad" className="data-[state=active]:bg-sky-100 data-[state=active]:text-sky-900 text-gray-700 flex-1">
+                <Shield className="h-4 w-4 mr-2" />
+                Seguridad
+              </TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="seguridad" className="space-y-6">
           <Card className="border-gray-200 bg-white shadow-sm">
             <CardHeader>
               <CardTitle className="text-gray-900">Seguridad de la Cuenta</CardTitle>
@@ -383,8 +281,10 @@ export default function ConfiguracionPage() {
             </CardContent>
           </Card>
 
-        </TabsContent>
-      </Tabs>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
     </div>
   )
 }

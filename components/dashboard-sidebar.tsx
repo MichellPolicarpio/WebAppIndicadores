@@ -186,7 +186,7 @@ export function DashboardSidebar({ user, collapsed, onToggle }: DashboardSidebar
           </div>
         ) : (
           // Vista normal para usuarios no-admin
-          <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg">
+        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg">
             <div className="space-y-3">
               <div className="text-center">
                 <div className="flex items-center justify-center gap-2 mb-2">

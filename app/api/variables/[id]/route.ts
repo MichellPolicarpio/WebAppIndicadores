@@ -4,6 +4,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { executeQuery } from '@/lib/database'
 import { cookies } from 'next/headers'
 
+// Función auxiliar para obtener el nombre completo del usuario
+function getUserFullName(user: any): string {
+  const parts = [
+    user.nombres?.trim(),
+    user.apellidoPaterno?.trim(),
+    user.apellidoMaterno?.trim()
+  ].filter(Boolean)
+  
+  if (parts.length > 0) {
+    return parts.join(' ').trim()
+  }
+  
+  // Fallback al usuario o email si no hay nombres
+  return user.usuario || user.email || 'Sistema'
+}
+
 // Eliminar registro de variable
 export async function DELETE(
   req: NextRequest,
@@ -76,7 +92,7 @@ export async function PUT(
       id, 
       valor, 
       observaciones_Periodo: observaciones_Periodo || null,
-      modificadoPor: user.usuario || user.email 
+      modificadoPor: getUserFullName(user)
     })
 
     return NextResponse.json({ 

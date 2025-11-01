@@ -4,6 +4,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { executeQuery } from '@/lib/database'
 import { cookies } from 'next/headers'
 
+// Función auxiliar para obtener el nombre completo del usuario
+function getUserFullName(user: any): string {
+  const parts = [
+    user.nombres?.trim(),
+    user.apellidoPaterno?.trim(),
+    user.apellidoMaterno?.trim()
+  ].filter(Boolean)
+  
+  if (parts.length > 0) {
+    return parts.join(' ').trim()
+  }
+  
+  // Fallback al usuario o email si no hay nombres
+  return user.usuario || user.email || 'Sistema'
+}
+
 export async function GET(req: NextRequest) {
   try {
     // Validar autenticación desde cookies
@@ -171,13 +187,16 @@ export async function POST(req: NextRequest) {
       id_Variable_Empresa_Gerencia, 
       periodo, 
       valor, 
-      creado_Por, 
       observaciones_Periodo,
       validadorDeInsercion 
     } = body
-    if (!id_Variable_Empresa_Gerencia || !periodo || valor === undefined || !creado_Por) {
+    
+    // Obtener el nombre completo del usuario desde la cookie
+    const creado_Por = getUserFullName(user)
+    
+    if (!id_Variable_Empresa_Gerencia || !periodo || valor === undefined) {
       console.error('❌ POST faltan campos', {
-        id_Variable_Empresa_Gerencia, periodo, valor, creado_Por
+        id_Variable_Empresa_Gerencia, periodo, valor
       })
       return NextResponse.json({ success: false, message: 'Faltan campos requeridos' }, { status: 400 })
     }

@@ -6,7 +6,7 @@ import * as XLSX from 'xlsx'
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar, Eye, ChevronDown, Trash2, Building2, FileSpreadsheet } from "lucide-react"
+import { ArrowLeft, Pencil, History, Plus, X, ChevronLeft, ChevronRight, Calendar, Eye, ChevronDown, Trash2, Building2, FileSpreadsheet, User, BarChart3 } from "lucide-react"
 import { getUser, type User } from "@/lib/auth"
 import {
   AlertDialog,
@@ -472,11 +472,11 @@ export default function VariablesPage() {
       const res = await fetch('/api/variables', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           id_Variable_Empresa_Gerencia: variableToAdd.id,
           periodo: nextMonthString,
           valor: valorNumerico,
-          creado_Por: 'Usuario',
           observaciones_Periodo: newMonthObservations || null
         })
       })
@@ -1139,60 +1139,148 @@ export default function VariablesPage() {
 
       {/* ==================== MODAL DE HISTÓRICO ==================== */}
       <Dialog open={historyDialogOpen} onOpenChange={setHistoryDialogOpen}>
-        <DialogContent className="sm:max-w-5xl max-h-[85vh] overflow-hidden">
-          <DialogHeader>
-            <DialogTitle>Histórico de Variable</DialogTitle>
-            <DialogDescription>
+        <DialogContent className="sm:max-w-6xl max-h-[90vh] overflow-hidden flex flex-col">
+          <DialogHeader className="pb-4 border-b border-gray-200">
+            <DialogTitle className="flex items-center gap-2 text-xl font-bold">
+              <div className="p-2 bg-blue-100 rounded-lg">
+                <History className="h-5 w-5 text-blue-600" />
+              </div>
+              <span>Histórico de Variable</span>
+            </DialogTitle>
+            <DialogDescription className="mt-2 text-base font-medium text-gray-700">
               {currentVariableName}
             </DialogDescription>
           </DialogHeader>
           
-          <div className="overflow-auto max-h-[65vh]">
+          <div className="flex-1 overflow-auto max-h-[calc(90vh-180px)] mt-4 rounded-lg border border-gray-200 bg-white">
             {loadingHistory ? (
-              <div className="text-center py-12 text-gray-500">Cargando histórico...</div>
+              <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600 mb-4"></div>
+                <p className="text-sm font-medium">Cargando histórico...</p>
+              </div>
             ) : historico.length === 0 ? (
-              <div className="text-center py-12 text-gray-500">No hay registros históricos</div>
+              <div className="flex flex-col items-center justify-center py-16 text-gray-500">
+                <History className="h-12 w-12 mb-4 text-gray-300" />
+                <p className="text-sm font-medium">No hay registros históricos</p>
+                <p className="text-xs text-gray-400 mt-1">Esta variable aún no tiene historial de cambios</p>
+              </div>
             ) : (
-              <table className="w-full">
-                <thead className="bg-gray-50 border-b border-gray-200 sticky top-0">
-                  <tr>
-                    <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Periodo</th>
-                    <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Valor</th>
-                    <th className="text-left px-4 py-3 text-sm font-semibold text-gray-700">Observaciones</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-gray-200">
-                  {historico.map((row) => (
-                    <tr key={row.id_Variable_EmpresaGerencia_Hechos} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3 text-sm text-gray-900 font-medium">
-                        {formatPeriodo(row.periodo)}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-900 font-bold">
-                        {row.valor.toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-sm text-gray-600">
-                        {row.observaciones_Periodo ? (
-                          <div className="max-w-xs">
-                            {row.observaciones_Periodo}
-                          </div>
-                        ) : (
-                          <span className="text-gray-400 italic">Sin observaciones</span>
-                        )}
-                      </td>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gradient-to-r from-gray-50 to-gray-100 border-b-2 border-gray-200 sticky top-0 z-10">
+                    <tr>
+                      <th className="text-left px-6 py-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-4 w-4" />
+                          <span>Período</span>
+                        </div>
+                      </th>
+                      <th className="text-left px-6 py-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <BarChart3 className="h-4 w-4" />
+                          <span>Valor</span>
+                        </div>
+                      </th>
+                      <th className="text-left px-6 py-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        Observaciones
+                      </th>
+                      <th className="text-left px-6 py-4 text-xs font-bold text-gray-700 uppercase tracking-wider">
+                        <div className="flex items-center gap-2">
+                          <Eye className="h-4 w-4" />
+                          <span>Auditoría</span>
+                        </div>
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 bg-white">
+                    {historico.map((row, index) => (
+                      <tr 
+                        key={row.id_Variable_EmpresaGerencia_Hechos} 
+                        className={`hover:bg-blue-50 transition-colors ${
+                          index % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'
+                        }`}
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-gray-900">
+                              {formatPeriodo(row.periodo)}
+                            </span>
+                            <span className="text-xs text-gray-500 mt-0.5">
+                              {new Date(row.fecha_Creacion).toLocaleDateString('es-MX', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                              })}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="text-base font-bold text-blue-700">
+                            {row.valor.toLocaleString('es-MX', {
+                              minimumFractionDigits: 0,
+                              maximumFractionDigits: 2
+                            })}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 max-w-md">
+                          {row.observaciones_Periodo ? (
+                            <div className="bg-gray-50 border border-gray-200 rounded-md px-3 py-2">
+                              <p className="text-sm text-gray-700 leading-relaxed">
+                                {row.observaciones_Periodo}
+                              </p>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-gray-400 italic flex items-center gap-1">
+                              <X className="h-3 w-3" />
+                              Sin observaciones
+                            </span>
+                          )}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-1.5">
+                            {row.creado_Por && (
+                              <div className="flex items-center gap-2">
+                                <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                                  <User className="h-3 w-3 mr-1.5" />
+                                  {row.creado_Por}
+                                </span>
+                              </div>
+                            )}
+                            <span className="text-xs text-gray-500">
+                              Creado: {new Date(row.fecha_Creacion).toLocaleDateString('es-MX', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             )}
           </div>
 
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setHistoryDialogOpen(false)}
-            >
-              Cerrar
-            </Button>
+          <DialogFooter className="mt-4 pt-4 border-t border-gray-200">
+            <div className="flex items-center justify-between w-full">
+              {historico.length > 0 && (
+                <div className="text-xs text-gray-500 flex items-center gap-2">
+                  <History className="h-3.5 w-3.5" />
+                  <span>{historico.length} registro{historico.length !== 1 ? 's' : ''} histórico{historico.length !== 1 ? 's' : ''}</span>
+                </div>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => setHistoryDialogOpen(false)}
+                className="ml-auto"
+              >
+                Cerrar
+              </Button>
+            </div>
           </DialogFooter>
         </DialogContent>
       </Dialog>
