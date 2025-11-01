@@ -114,7 +114,7 @@ export default function VariablesPage() {
   // Estado para el siguiente mes (para evitar duplicados al agregar)
   const [nextMonthVariables, setNextMonthVariables] = useState<VariableRow[]>([])
 
-  // Detectar si es admin al cargar
+  // Detectar si es admin al cargar y leer parámetro month de URL
   useEffect(() => {
     const currentUser = getUser()
     if (currentUser) {
@@ -129,6 +129,27 @@ export default function VariablesPage() {
       }
     } else {
       console.warn('⚠️ [Frontend] No se encontró usuario en localStorage')
+    }
+
+    // Leer parámetro month de la URL si existe
+    if (typeof window !== 'undefined') {
+      const urlParams = new URLSearchParams(window.location.search)
+      const monthParam = urlParams.get('month')
+      if (monthParam) {
+        try {
+          const [year, month] = monthParam.split('-').map(Number)
+          if (year && month) {
+            const date = new Date(year, month - 1, 1)
+            setSelectedMonth(date)
+            // Limpiar el parámetro de la URL después de leerlo
+            urlParams.delete('month')
+            const newUrl = window.location.pathname + (urlParams.toString() ? `?${urlParams.toString()}` : '')
+            window.history.replaceState({}, '', newUrl)
+          }
+        } catch (error) {
+          console.error('Error parseando parámetro month:', error)
+        }
+      }
     }
   }, [])
 

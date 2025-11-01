@@ -1,6 +1,7 @@
 "use client"
 
-import { HelpCircle, User, LogOut, Settings, BarChart3, Target, FileText, Info, Menu, Bell, Search, Database, LineChart, Home, PlusCircle, LucideIcon } from "lucide-react"
+import { useState, useEffect } from "react"
+import { HelpCircle, User, LogOut, Settings, BarChart3, Target, FileText, Info, Menu, Bell, Search, Database, LineChart, Home, PlusCircle, LucideIcon, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -125,8 +126,78 @@ function getHelpContent(pageTitle?: string) {
   }
 }
 
+interface Notification {
+  id: string
+  type: 'missing_indicators'
+  title: string
+  message: string
+  month: string
+  year: number
+  monthNumber: number
+  faltantes: number
+  total: number
+}
+
 export function DashboardHeader({ user, sidebarCollapsed, pageInfo, onToggleSidebar }: DashboardHeaderProps) {
   const router = useRouter()
+  const [notifications, setNotifications] = useState<Notification[]>([])
+  const [loadingNotifications, setLoadingNotifications] = useState(true)
+
+  // Cargar notificaciones al montar el componente y cada 5 minutos
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const response = await fetch('/api/notifications', {
+          credentials: 'include',
+          cache: 'no-store'
+        })
+        const result = await response.json()
+        
+        if (result.success && result.notifications) {
+          setNotifications(result.notifications)
+        } else {
+          setNotifications([])
+        }
+      } catch (error) {
+        console.error('Error cargando notificaciones:', error)
+        setNotifications([])
+      } finally {
+        setLoadingNotifications(false)
+      }
+    }
+
+    fetchNotifications()
+    // Recargar cada 5 minutos
+    const interval = setInterval(fetchNotifications, 5 * 60 * 1000)
+    
+    return () => clearInterval(interval)
+  }, [])
+
+  const formatTimeAgo = (monthNumber: number, year: number) => {
+    const now = new Date()
+    const currentYear = now.getFullYear()
+    const currentMonth = now.getMonth() + 1
+    
+    if (year === currentYear && monthNumber === currentMonth) {
+      return "Mes actual"
+    }
+    
+    const monthsDiff = (currentYear - year) * 12 + (currentMonth - monthNumber)
+    
+    if (monthsDiff === 1) {
+      return "Hace 1 mes"
+    } else if (monthsDiff <= 6) {
+      return `Hace ${monthsDiff} meses`
+    } else {
+      return `${monthNumber}/${year}`
+    }
+  }
+
+  const handleNotificationClick = (notification: Notification) => {
+    // Redirigir a la página de indicadores con el mes seleccionado
+    const monthStr = `${notification.year}-${notification.monthNumber.toString().padStart(2, '0')}-01`
+    router.push(`/dashboard/indicadores/variable?month=${monthStr}`)
+  }
   
   return (
     <header
@@ -188,7 +259,7 @@ export function DashboardHeader({ user, sidebarCollapsed, pageInfo, onToggleSide
             <DialogTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-0 h-auto transition-all duration-200"
+                className="text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-0 h-auto transition-all duration-200 mr-3"
               >
                 <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
                   <Info className="h-4 w-4 text-white" />
@@ -264,6 +335,87 @@ export function DashboardHeader({ user, sidebarCollapsed, pageInfo, onToggleSide
               </div>
             </DialogContent>
           </Dialog>
+
+          {/* Botón de Notificaciones */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                className="relative text-white/80 hover:text-white hover:bg-white/10 rounded-xl p-0 h-auto transition-all duration-200"
+              >
+                <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center relative">
+                  <Bell className="h-4 w-4 text-white" />
+                  {/* Badge de notificaciones dinámico */}
+                  {notifications.length > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#0D94B1] flex items-center justify-center">
+                      <span className="text-[8px] font-bold text-white">
+                        {notifications.length > 9 ? '9+' : notifications.length}
+                      </span>
+                    </span>
+                  )}
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-80 bg-white border-gray-200 shadow-xl">
+              <DropdownMenuLabel className="text-gray-900 flex items-center justify-between">
+                <span className="font-semibold">Notificaciones</span>
+                {notifications.length > 0 && (
+                  <span className="text-xs text-gray-500 font-normal">
+                    {notifications.length} {notifications.length === 1 ? 'nueva' : 'nuevas'}
+                  </span>
+                )}
+              </DropdownMenuLabel>
+              <DropdownMenuSeparator className="bg-gray-200" />
+              <div className="max-h-[400px] overflow-y-auto">
+                {loadingNotifications ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                ) : notifications.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-8 px-4 text-center">
+                    <Bell className="h-8 w-8 text-gray-300 mb-2" />
+                    <p className="text-sm text-gray-500 font-medium">No hay notificaciones</p>
+                    <p className="text-xs text-gray-400 mt-1">Todos tus indicadores están completos</p>
+                  </div>
+                ) : (
+                  notifications.map((notification) => (
+                    <DropdownMenuItem 
+                      key={notification.id}
+                      className="flex flex-col items-start gap-1 p-3 hover:bg-blue-50 cursor-pointer focus:bg-blue-50"
+                      onClick={() => handleNotificationClick(notification)}
+                    >
+                      <div className="flex items-start gap-2 w-full">
+                        <div className="w-2 h-2 bg-red-500 rounded-full mt-1.5 flex-shrink-0 animate-pulse" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-gray-900">{notification.title}</p>
+                          <p className="text-xs text-gray-500 mt-0.5 break-words">{notification.message}</p>
+                          <div className="flex items-center gap-2 mt-1.5">
+                            <span className="text-xs text-gray-400">
+                              {formatTimeAgo(notification.monthNumber, notification.year)}
+                            </span>
+                            <span className="text-xs text-red-600 font-semibold">
+                              {notification.faltantes}/{notification.total} faltantes
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </DropdownMenuItem>
+                  ))
+                )}
+              </div>
+              {notifications.length > 0 && (
+                <>
+                  <DropdownMenuSeparator className="bg-gray-200" />
+                  <DropdownMenuItem 
+                    className="text-center justify-center text-blue-600 hover:bg-blue-50 focus:bg-blue-50 cursor-pointer font-medium"
+                    onClick={() => router.push('/dashboard/indicadores/variable')}
+                  >
+                    Ir a Indicadores
+                  </DropdownMenuItem>
+                </>
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Separador - oculto en móvil */}
           <div className="hidden md:block h-6 w-px bg-white/20 ml-3 mr-0"></div>
